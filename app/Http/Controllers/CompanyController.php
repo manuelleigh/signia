@@ -30,6 +30,8 @@ class CompanyController extends Controller
             'business_name' => 'required|string|max:255',
             'environment' => 'required|in:demo,production',
             'engine_type' => 'required|in:qpse,native',
+            'sol_user' => 'nullable|string',
+            'sol_pass' => 'nullable|string',
         ]);
 
         $agency = $request->user()->agency;
@@ -37,7 +39,57 @@ class CompanyController extends Controller
             return redirect()->back()->withErrors(['error' => 'No tienes una agencia asignada.']);
         }
 
-        $agency->companies()->create($request->all());
+        $data = $request->all();
+
+        if ($data['engine_type'] === 'qpse') {
+            $qpseToken = config('services.qpse.token');
+            if (!$qpseToken) {
+                return redirect()->back()->withErrors(['error' => 'Token de QPSE no configurado.']);
+            }
+
+            // 1. Crear empresa en QPSE
+            $response = \Illuminate\Support\Facades\Http::withToken($qpseToken)
+                ->post('https://cpanel.qpse.pe/api/empresa/crear', [
+                    'ruc' => $data['ruc'],
+                    'tipo_de_plan' => '01'
+                ]);
+
+            if (!$response->successful()) {
+                return redirect()->back()->withErrors(['error' => 'Error al crear empresa en QPSE: ' . $response->body()]);
+            }
+
+            $qpseData = $response->json();
+            $data['qpse_username'] = $qpseData['username'] ?? null;
+            $data['qpse_password'] = $qpseData['password'] ?? null;
+            $data['qpse_plan_type'] = '01';
+
+            // Wait, we need external_id. The docs say `POST /api/empresa/crear` doesn't return external_id.
+            // But we need external_id for production. We can get it from GET /api/empresas.
+            $empresasResponse = \Illuminate\Support\Facades\Http::withToken($qpseToken)
+                ->get('https://cpanel.qpse.pe/api/empresas');
+            
+            if ($empresasResponse->successful()) {
+                $empresas = $empresasResponse->json()['data'] ?? [];
+                $empresa = collect($empresas)->firstWhere('ruc', $data['ruc']);
+                if ($empresa) {
+                    $data['qpse_external_id'] = $empresa['external_id'];
+                }
+            }
+
+            // 2. Pasar a producción si aplica
+            if ($data['environment'] === 'production' && isset($data['qpse_external_id'])) {
+                $prodResponse = \Illuminate\Support\Facades\Http::withToken($qpseToken)
+                    ->post('https://cpanel.qpse.pe/api/empresa/produccion', [
+                        'external_id' => $data['qpse_external_id'],
+                        'plan_type' => '01'
+                    ]);
+                if (!$prodResponse->successful()) {
+                    return redirect()->back()->withErrors(['error' => 'Error al pasar a producción en QPSE: ' . $prodResponse->body()]);
+                }
+            }
+        }
+
+        $agency->companies()->create($data);
 
         return redirect()->route('companies.index')->with('success', 'RUC registrado exitosamente.');
     }

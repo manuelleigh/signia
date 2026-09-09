@@ -9,7 +9,10 @@ class Company extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['agency_id', 'ruc', 'business_name', 'environment', 'engine_type'];
+    protected $fillable = [
+        'agency_id', 'ruc', 'business_name', 'environment', 'engine_type',
+        'sol_user', 'sol_pass', 'qpse_external_id', 'qpse_username', 'qpse_password', 'qpse_plan_type'
+    ];
 
     public function agency()
     {
