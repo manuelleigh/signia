@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -68,11 +68,11 @@ const submit = () => {
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Motor de Envío</label>
                             <select v-model="form.engine_type" class="block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-900">
-                                <option value="qpse">Motor PSE (Vía QPSE) - Recomendado</option>
+                                <option value="qpse">Motor PSE (Firma Delegada) - Recomendado</option>
                                 <option value="native">Motor Nativo (Certificado Propio)</option>
                             </select>
                             <p class="text-xs text-slate-500 mt-2">
-                                <span v-if="form.engine_type === 'qpse'">Delega la firma a QPSE. Se registrará automáticamente.</span>
+                                <span v-if="form.engine_type === 'qpse'">Delega la firma electrónica a nuestros servidores autorizados.</span>
                                 <span v-else>Firma con el certificado digital propio de la empresa.</span>
                             </p>
                         </div>

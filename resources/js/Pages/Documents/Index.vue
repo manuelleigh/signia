@@ -310,7 +310,7 @@ const formatShortDate = (dateString) => {
                                                                 <div>
                                                                     <p class="text-sm font-semibold text-slate-800">signXml</p>
                                                                     <p class="mt-1 text-sm text-slate-500">Mensaje: XML firmado correctamente.</p>
-                                                                    <p class="mt-1 text-xs text-slate-400">Motor: {{ selectedDocument?.company?.engine_type === 'qpse' ? 'QPSE API' : 'Nativo SUNAT' }}</p>
+                                                                    <p class="mt-1 text-xs text-slate-400">Motor: {{ selectedDocument?.company?.engine_type === 'qpse' ? 'PSE (Firma Delegada)' : 'Nativo SUNAT' }}</p>
                                                                 </div>
                                                                 <div class="whitespace-nowrap text-right text-xs text-slate-400">
                                                                     {{ formatDate(selectedDocument?.created_at) }}

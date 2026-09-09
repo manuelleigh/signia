@@ -70,7 +70,7 @@
                 <!-- ENTORNOS SECTION -->
                 <section id="entornos" class="mb-20 pt-8">
                     <h1 class="text-3xl font-bold text-gray-900 mb-6">Entornos de Integración</h1>
-                    <p class="mb-6 leading-relaxed">Signia B2B provee un único endpoint base. La plataforma enruta automáticamente los documentos a SUNAT Beta (Motor Nativo) o a Producción (QPSE) según la configuración del RUC en el Dashboard.</p>
+                    <p class="mb-6 leading-relaxed">Signia B2B provee un único endpoint base. La plataforma enruta automáticamente los documentos a SUNAT Beta (Motor Nativo) o a Producción (Motor PSE) según la configuración del RUC en el Dashboard.</p>
                     
                     <div class="endpoint-box mb-10">
                         <span class="text-gray-500">URL Base:</span>

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'qpse' => [
+        'endpoint' => env('QPSE_ENDPOINT', 'https://api.qpse.pe/v3/firmar-xml'),
+        'token'    => env('QPSE_TOKEN'),
+    ],
+
 ];
