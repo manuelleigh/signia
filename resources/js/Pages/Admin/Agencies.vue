@@ -119,33 +119,31 @@ const submitBalance = () => {
                                     <tr>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">RUC</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Razón Social</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Entorno</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motor</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Usuario (PSE/SOL)</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Clave (PSE/SOL)</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase bg-blue-50">Usuario SOL</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase bg-blue-50">Clave SOL</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Usuario Motor PSE</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="comp in activeAgency?.companies" :key="comp.id">
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ comp.ruc }}</td>
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ comp.business_name }}</td>
-                                        <td class="px-4 py-2 text-sm">
-                                            <span :class="{'bg-green-100 text-green-800': comp.environment === 'production', 'bg-yellow-100 text-yellow-800': comp.environment === 'demo'}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize">
-                                                {{ comp.environment }}
-                                            </span>
-                                        </td>
                                         <td class="px-4 py-2 text-sm text-gray-900">
                                             {{ comp.engine_type === 'qpse' ? 'Motor PSE' : 'Motor Nativo' }}
                                         </td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono">
-                                            {{ comp.engine_type === 'qpse' ? (comp.qpse_username || 'N/A') : (comp.sol_user || 'N/A') }}
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono bg-blue-50 font-bold">
+                                            {{ comp.sol_user || 'N/A' }}
                                         </td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono">
-                                            {{ comp.engine_type === 'qpse' ? (comp.qpse_password || 'N/A') : (comp.sol_pass || 'N/A') }}
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono bg-blue-50">
+                                            {{ comp.sol_pass || 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono text-gray-500">
+                                            {{ comp.engine_type === 'qpse' ? (comp.qpse_username || 'N/A') : 'N/A' }}
                                         </td>
                                     </tr>
                                     <tr v-if="!activeAgency?.companies || activeAgency.companies.length === 0">
-                                        <td colspan="6" class="px-4 py-4 text-center text-gray-500 text-sm">Esta agencia aún no ha registrado empresas. (Si acabas de registrar, recarga la página)</td>
+                                        <td colspan="6" class="px-4 py-4 text-center text-gray-500 text-sm">Esta agencia aún no ha registrado empresas.</td>
                                     </tr>
                                 </tbody>
                             </table>
