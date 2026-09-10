@@ -259,12 +259,12 @@ const formatShortDate = (dateString) => {
                                         <div class="pt-4 mt-6 border-t border-slate-100">
                                             <span class="text-slate-400 block text-xs font-semibold uppercase mb-3">Descargas</span>
                                             <div class="flex gap-3">
-                                                <button class="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 font-medium flex items-center gap-2 transition-colors disabled:opacity-50" :disabled="!selectedDocument?.xml_path && selectedDocument?.status !== 'accepted'">
+                                                <a :href="selectedDocument?.xml_path ? '/storage/' + selectedDocument.xml_path : '#'" target="_blank" class="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 font-medium flex items-center gap-2 transition-colors" :class="{'opacity-50 cursor-not-allowed pointer-events-none': !selectedDocument?.xml_path}">
                                                     <i class="ph ph-file-code"></i> XML
-                                                </button>
-                                                <button class="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 font-medium flex items-center gap-2 transition-colors disabled:opacity-50" :disabled="!selectedDocument?.cdr_path && selectedDocument?.status !== 'accepted'">
+                                                </a>
+                                                <a :href="selectedDocument?.cdr_path ? '/storage/' + selectedDocument.cdr_path : '#'" target="_blank" class="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 font-medium flex items-center gap-2 transition-colors" :class="{'opacity-50 cursor-not-allowed pointer-events-none': !selectedDocument?.cdr_path}">
                                                     <i class="ph ph-file-zip"></i> CDR
-                                                </button>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -310,7 +310,7 @@ const formatShortDate = (dateString) => {
                                                                 <div>
                                                                     <p class="text-sm font-semibold text-slate-800">signXml</p>
                                                                     <p class="mt-1 text-sm text-slate-500">Mensaje: XML firmado correctamente.</p>
-                                                                    <p class="mt-1 text-xs text-slate-400">Motor: {{ selectedDocument?.company?.engine_type === 'qpse' ? 'PSE (Firma Delegada)' : 'Nativo SUNAT' }}</p>
+                                                                    <p class="mt-1 text-xs text-slate-400">Motor: {{ selectedDocument?.company?.engine_type === 'qpse' ? 'Motor PSE' : 'Nativo SUNAT' }}</p>
                                                                 </div>
                                                                 <div class="whitespace-nowrap text-right text-xs text-slate-400">
                                                                     {{ formatDate(selectedDocument?.created_at) }}
