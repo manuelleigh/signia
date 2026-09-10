@@ -15,7 +15,7 @@ class AgencyController extends Controller
             abort(403, 'Acceso Denegado');
         }
 
-        $agencies = Agency::with('user')->withCount('companies')->latest()->get();
+        $agencies = Agency::with(['user', 'companies'])->withCount('companies')->latest()->get();
 
         return Inertia::render('Admin/Agencies', [
             'agencies' => $agencies
