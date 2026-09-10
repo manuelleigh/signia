@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Services\Billing\BalanceService;
 use App\Services\Signia\EngineRouter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class DocumentController extends Controller
@@ -73,7 +74,29 @@ class DocumentController extends Controller
                 return response()->json($result, 500);
             }
 
-            // 4. Guardar historial
+            // 4. Guardar archivos localmente para trazabilidad (4 años SUNAT)
+            $fileNameBase = "{$ruc}-{$docType}-{$series}-{$number}";
+            $pathPrefix = "documents/{$ruc}/" . date('Y/m');
+            
+            $xmlPath = null;
+            if (!empty($result['xml_base64'])) {
+                $xmlPath = "{$pathPrefix}/{$fileNameBase}.xml";
+                Storage::disk('public')->put($xmlPath, base64_decode($result['xml_base64']));
+            }
+            
+            $cdrPath = null;
+            if (!empty($result['cdr_base64'])) {
+                $cdrPath = "{$pathPrefix}/R-{$fileNameBase}.zip";
+                Storage::disk('public')->put($cdrPath, base64_decode($result['cdr_base64']));
+            }
+
+            $pdfPath = null;
+            if (!empty($result['pdf_base64'])) {
+                $pdfPath = "{$pathPrefix}/{$fileNameBase}.pdf";
+                Storage::disk('public')->put($pdfPath, base64_decode($result['pdf_base64']));
+            }
+
+            // 5. Guardar historial
             $document = Document::create([
                 'agency_id' => $agency->id,
                 'company_id' => $company->id,
@@ -83,13 +106,19 @@ class DocumentController extends Controller
                 'xml_hash' => $result['xml_hash'] ?? null,
                 'status' => 'accepted',
                 'ticket' => $result['ticket'] ?? null,
-                'cdr_path' => $result['cdr_url'] ?? null,
+                'xml_path' => $xmlPath,
+                'cdr_path' => $cdrPath,
+                'pdf_path' => $pdfPath,
             ]);
 
             return response()->json([
-                'status' => 'success',
+                'success' => true,
                 'message' => 'Documento procesado correctamente.',
-                'data' => $document
+                'data' => $document,
+                'xml_base64' => $result['xml_base64'] ?? null,
+                'cdr_base64' => $result['cdr_base64'] ?? null,
+                'pdf_base64' => $result['pdf_base64'] ?? null,
+                'ticket' => $result['ticket'] ?? null,
             ]);
 
         } catch (Exception $e) {
@@ -99,7 +128,7 @@ class DocumentController extends Controller
             }
             
             return response()->json([
-                'status' => 'error',
+                'success' => false,
                 'message' => $e->getMessage()
             ], 400);
         }

@@ -68,7 +68,7 @@ const submit = () => {
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Motor de Envío</label>
                             <select v-model="form.engine_type" class="block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-900">
-                                <option value="qpse">Motor PSE (Firma Delegada) - Recomendado</option>
+                                <option value="qpse">Motor PSE - Recomendado</option>
                                 <option value="native">Motor Nativo (Certificado Propio)</option>
                             </select>
                             <p class="text-xs text-slate-500 mt-2">

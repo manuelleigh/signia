@@ -265,6 +265,9 @@ const formatShortDate = (dateString) => {
                                                 <a :href="selectedDocument?.cdr_path ? '/storage/' + selectedDocument.cdr_path : '#'" target="_blank" class="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 font-medium flex items-center gap-2 transition-colors" :class="{'opacity-50 cursor-not-allowed pointer-events-none': !selectedDocument?.cdr_path}">
                                                     <i class="ph ph-file-zip"></i> CDR
                                                 </a>
+                                                <a :href="selectedDocument?.pdf_path ? '/storage/' + selectedDocument.pdf_path : '#'" target="_blank" class="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 font-medium flex items-center gap-2 transition-colors" :class="{'opacity-50 cursor-not-allowed pointer-events-none': !selectedDocument?.pdf_path}">
+                                                    <i class="ph ph-file-pdf"></i> PDF
+                                                </a>
                                             </div>
                                         </div>
                                     </div>

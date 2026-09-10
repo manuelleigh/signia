@@ -9,7 +9,7 @@ class Document extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['agency_id', 'company_id', 'document_type', 'serie', 'number', 'xml_hash', 'status', 'ticket', 'cdr_path', 'xml_path'];
+    protected $fillable = ['agency_id', 'company_id', 'document_type', 'serie', 'number', 'xml_hash', 'status', 'ticket', 'cdr_path', 'xml_path', 'pdf_path'];
 
     public function agency()
     {
