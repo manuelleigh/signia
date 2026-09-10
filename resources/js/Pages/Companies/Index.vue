@@ -72,7 +72,7 @@ const submitCert = () => {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap uppercase text-sm font-medium">
-                                        {{ company.engine_type }}
+                                        {{ company.engine_type === 'qpse' ? 'PSE (Firma Delegada)' : 'Motor Nativo' }}
                                         <div v-if="company.engine_type === 'native'">
                                             <span v-if="company.certificate" class="text-xs text-green-600 block mt-1">✔ Cert. Configurado</span>
                                             <span v-else class="text-xs text-red-600 block mt-1">⚠ Falta Certificado</span>
