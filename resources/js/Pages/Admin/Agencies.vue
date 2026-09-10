@@ -100,7 +100,7 @@ const submitBalance = () => {
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showCompaniesModal = false"></div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
@@ -121,6 +121,8 @@ const submitBalance = () => {
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Razón Social</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Entorno</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motor</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Usuario (PSE/SOL)</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Clave (PSE/SOL)</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -128,16 +130,22 @@ const submitBalance = () => {
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ comp.ruc }}</td>
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ comp.business_name }}</td>
                                         <td class="px-4 py-2 text-sm">
-                                            <span :class="{'bg-green-100 text-green-800': comp.environment === 'production', 'bg-yellow-100 text-yellow-800': comp.environment === 'demo'}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                            <span :class="{'bg-green-100 text-green-800': comp.environment === 'production', 'bg-yellow-100 text-yellow-800': comp.environment === 'demo'}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize">
                                                 {{ comp.environment }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-2 text-sm text-gray-900">
                                             {{ comp.engine_type === 'qpse' ? 'Motor PSE' : 'Motor Nativo' }}
                                         </td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono">
+                                            {{ comp.engine_type === 'qpse' ? (comp.qpse_username || 'N/A') : (comp.sol_user || 'N/A') }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono">
+                                            {{ comp.engine_type === 'qpse' ? (comp.qpse_password || 'N/A') : (comp.sol_pass || 'N/A') }}
+                                        </td>
                                     </tr>
-                                    <tr v-if="!activeAgency?.companies?.length">
-                                        <td colspan="4" class="px-4 py-4 text-center text-gray-500 text-sm">Esta agencia aún no ha registrado empresas.</td>
+                                    <tr v-if="!activeAgency?.companies || activeAgency.companies.length === 0">
+                                        <td colspan="6" class="px-4 py-4 text-center text-gray-500 text-sm">Esta agencia aún no ha registrado empresas. (Si acabas de registrar, recarga la página)</td>
                                     </tr>
                                 </tbody>
                             </table>
