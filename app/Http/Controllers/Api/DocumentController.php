@@ -45,14 +45,18 @@ class DocumentController extends Controller
             return response()->json(['error' => 'RUC no registrado bajo esta agencia.'], 404);
         }
 
-        // 2. Descontar saldo con Bloqueo Pesimista
+        $isDemo = $company->environment === 'demo';
+
+        // 2. Descontar saldo con Bloqueo Pesimista (SOLO en Producción)
         $engineType = $company->engine_type;
         $balanceField = $engineType === 'qpse' ? 'balance_qpse' : 'balance_native';
 
-        try {
-            $this->balanceService->deductBalance($agency->id, $engineType);
-        } catch (Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        if (!$isDemo) {
+            try {
+                $this->balanceService->deductBalance($agency->id, $engineType);
+            } catch (Exception $e) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+            }
         }
 
         try {
@@ -63,7 +67,9 @@ class DocumentController extends Controller
 
             if ((isset($result['status']) && $result['status'] === 'error') || (isset($result['success']) && $result['success'] === false)) {
                 // Revertir saldo
-                $agency->increment($balanceField);
+                if (!$isDemo) {
+                    $agency->increment($balanceField);
+                }
                 return response()->json($result, 500);
             }
 
@@ -88,7 +94,9 @@ class DocumentController extends Controller
 
         } catch (Exception $e) {
             // Revertir saldo
-            $agency->increment($balanceField);
+            if (!$isDemo) {
+                $agency->increment($balanceField);
+            }
             
             return response()->json([
                 'status' => 'error',
@@ -104,8 +112,7 @@ class DocumentController extends Controller
             'ticket' => 'required|string'
         ]);
 
-        // Simulación de respuesta de SUNAT para el ticket
-        // En producción aquí se instancia WsClient y se llama a getStatus
+        // Simulacion de respuesta de SUNAT para el ticket
         return response()->json([
             'success' => true,
             'message' => 'Consulta de ticket procesada correctamente',
