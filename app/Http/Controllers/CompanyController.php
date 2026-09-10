@@ -44,7 +44,7 @@ class CompanyController extends Controller
         if ($data['engine_type'] === 'qpse') {
             $qpseToken = config('services.qpse.token');
             if (!$qpseToken) {
-                return redirect()->back()->withErrors(['error' => 'Token de QPSE no configurado.']);
+                return redirect()->back()->withErrors(['error' => 'Token de proveedor de firma no configurado en el sistema.']);
             }
 
             // 1. Crear empresa en QPSE
@@ -55,7 +55,7 @@ class CompanyController extends Controller
                 ]);
 
             if (!$response->successful()) {
-                return redirect()->back()->withErrors(['error' => 'Error al crear empresa en QPSE: ' . $response->body()]);
+                return redirect()->back()->withErrors(['error' => 'Error al registrar la empresa en el proveedor de firma: ' . $response->body()]);
             }
 
             $qpseData = $response->json();
@@ -84,7 +84,7 @@ class CompanyController extends Controller
                         'plan_type' => '01'
                     ]);
                 if (!$prodResponse->successful()) {
-                    return redirect()->back()->withErrors(['error' => 'Error al pasar a producción en QPSE: ' . $prodResponse->body()]);
+                    return redirect()->back()->withErrors(['error' => 'Error al activar producción en el proveedor de firma: ' . $prodResponse->body()]);
                 }
             }
         }
