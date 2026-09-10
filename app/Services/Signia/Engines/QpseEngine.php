@@ -78,73 +78,104 @@ class QpseEngine implements EngineContract
     }
 
     /**
-     * Motor exhaustivo de validación simulado para no consumir la API de QPSE durante Beta/Demo.
+     * Motor exhaustivo de validación simulado con mensajes amigables y sugerencias (Beta).
      */
     private function processMockDemo(Company $company, array $payload): array
     {
-        // 1. Validación exhaustiva de estructura de comprobante
         $errors = [];
         
+        // DOCUMENTO
         if (empty($payload['document']['document_type_id'])) {
-            $errors[] = 'Falta document.document_type_id (Ej: 01 para Factura, 03 para Boleta).';
+            $errors[] = '[document_type_id]: Es obligatorio. Debes indicar qué tipo de comprobante es (Ej: "01" para Factura, "03" para Boleta, "07" para Nota de Crédito).';
         }
         if (empty($payload['document']['series'])) {
-            $errors[] = 'Falta document.series (Ej: F001).';
+            $errors[] = '[series]: Es obligatorio. Debes indicar la serie del comprobante (Ej: "F001" o "B001").';
         }
         if (empty($payload['document']['number'])) {
-            $errors[] = 'Falta document.number (Ej: 123).';
-        }
-        if (empty($payload['customer']['identity_document_type_id'])) {
-            $errors[] = 'Falta customer.identity_document_type_id (Ej: 6 para RUC).';
-        }
-        if (empty($payload['customer']['number'])) {
-            $errors[] = 'Falta customer.number (Ej: 20123456789).';
-        }
-        if (empty($payload['customer']['name'])) {
-            $errors[] = 'Falta customer.name (Razón social del cliente).';
+            $errors[] = '[number]: Es obligatorio. Debes indicar el correlativo numérico (Ej: "1", "123").';
         }
         if (empty($payload['document']['currency_type_id'])) {
-            $errors[] = 'Falta document.currency_type_id (Ej: PEN o USD).';
+            $errors[] = '[currency_type_id]: Es obligatorio. Indica la moneda (Ej: "PEN" para Soles o "USD" para Dólares).';
         }
-        
-        // Items
+
+        // CLIENTE
+        if (empty($payload['customer']['identity_document_type_id'])) {
+            $errors[] = '[customer.identity_document_type_id]: Es obligatorio. Indica el tipo de documento del cliente (Ej: "6" para RUC, "1" para DNI).';
+        }
+        if (empty($payload['customer']['number'])) {
+            $errors[] = '[customer.number]: Es obligatorio. Ingresa el número de RUC o DNI del cliente.';
+        } elseif (strlen($payload['customer']['number']) !== 11 && ($payload['customer']['identity_document_type_id'] ?? '') === '6') {
+            $errors[] = '[customer.number]: Como indicaste el tipo "6" (RUC), el número debe tener exactamente 11 dígitos.';
+        }
+        if (empty($payload['customer']['name'])) {
+            $errors[] = '[customer.name]: Es obligatorio. Coloca la Razón Social o el nombre completo de tu cliente.';
+        }
+
+        // ITEMS
         if (empty($payload['items']) || !is_array($payload['items'])) {
-            $errors[] = 'Falta el arreglo de items, o no contiene productos.';
+            $errors[] = '[items]: Debes enviar un arreglo de productos o servicios. ¡Un comprobante no puede estar vacío!';
         } else {
+            $calcTotal = 0;
             foreach ($payload['items'] as $index => $item) {
-                if (!isset($item['internal_id'])) $errors[] = "Item $index: Falta internal_id.";
-                if (!isset($item['description'])) $errors[] = "Item $index: Falta description.";
-                if (!isset($item['unit_type_id'])) $errors[] = "Item $index: Falta unit_type_id (Ej: NIU o ZZ).";
-                if (!isset($item['quantity'])) $errors[] = "Item $index: Falta quantity.";
-                if (!isset($item['unit_value'])) $errors[] = "Item $index: Falta unit_value.";
-                if (!isset($item['unit_price'])) $errors[] = "Item $index: Falta unit_price.";
-                if (!isset($item['total'])) $errors[] = "Item $index: Falta total.";
-                if (!isset($item['total_taxes'])) $errors[] = "Item $index: Falta total_taxes.";
+                if (empty($item['internal_id'])) {
+                    $errors[] = "Item [$index]: Falta 'internal_id'. Agrega un código de producto (Ej: 'PROD-01').";
+                }
+                if (empty($item['description'])) {
+                    $errors[] = "Item [$index]: Falta 'description'. ¿Qué producto estás vendiendo?";
+                }
+                if (empty($item['unit_type_id'])) {
+                    $errors[] = "Item [$index]: Falta 'unit_type_id'. Agrega la unidad de medida según SUNAT (Ej: 'NIU' para bienes, 'ZZ' para servicios).";
+                }
+                if (!isset($item['quantity']) || $item['quantity'] <= 0) {
+                    $errors[] = "Item [$index]: 'quantity' debe ser mayor a 0.";
+                }
+                if (!isset($item['unit_value'])) {
+                    $errors[] = "Item [$index]: Falta 'unit_value' (Precio unitario sin IGV).";
+                }
+                if (!isset($item['total_taxes'])) {
+                    $errors[] = "Item [$index]: Falta 'total_taxes' (Monto total de impuestos de este producto).";
+                }
+                if (!isset($item['total'])) {
+                    $errors[] = "Item [$index]: Falta 'total' (Monto total del producto con IGV incluido).";
+                }
+                
+                // Sugerencia de matemáticas
+                if (isset($item['unit_value']) && isset($item['quantity']) && isset($item['total'])) {
+                    $expectedTotal = round(($item['unit_value'] * $item['quantity']) + ($item['total_taxes'] ?? 0), 2);
+                    if (abs($item['total'] - $expectedTotal) > 0.5) {
+                        $errors[] = "Item [$index]: Matemáticas incorrectas. El 'total' que enviaste ({$item['total']}) no coincide con (unit_value * quantity) + impuestos (esperado: {$expectedTotal}).";
+                    }
+                    $calcTotal += $item['total'];
+                }
             }
         }
 
-        // Totales
-        if (!isset($payload['document']['total_taxed'])) $errors[] = 'Falta document.total_taxed.';
-        if (!isset($payload['document']['total_igv'])) $errors[] = 'Falta document.total_igv.';
-        if (!isset($payload['document']['total'])) $errors[] = 'Falta document.total.';
+        // TOTALES GLOBALES
+        if (!isset($payload['document']['total_taxed'])) {
+            $errors[] = '[total_taxed]: Falta el total de las operaciones gravadas (Subtotal sin IGV).';
+        }
+        if (!isset($payload['document']['total_igv'])) {
+            $errors[] = '[total_igv]: Falta el monto total del IGV (Generalmente el 18% del total gravado).';
+        }
+        if (!isset($payload['document']['total'])) {
+            $errors[] = '[total]: Falta el monto total final del comprobante.';
+        } elseif (isset($calcTotal) && abs($payload['document']['total'] - $calcTotal) > 0.5) {
+            $errors[] = "[total]: El total global de la factura ({$payload['document']['total']}) no coincide con la suma de los totales de los ítems ({$calcTotal}). Revisa tus cálculos.";
+        }
 
+        // DEVOLVER ERRORES ESTRUCTURADOS SI LOS HAY
         if (count($errors) > 0) {
             return [
                 'success' => false,
-                'message' => 'Errores de validación estructural (Signia MOCK): ' . implode(' | ', $errors)
+                'message' => 'La estructura de tu comprobante tiene problemas. Por favor, corrige las siguientes observaciones para cumplir con SUNAT:',
+                'errors' => $errors // Array estructurado para que el cliente lo lea fácil
             ];
         }
 
         // 2. Simulador de Respuesta Exitosa (Mock)
-        // XML Simulando el firmado UBL 2.1
-        $docId = $payload['document']['series'] . '-' . $payload['document']['number'];
+        $docId = ($payload['document']['series'] ?? 'F001') . '-' . ($payload['document']['number'] ?? '1');
         $dummyXml = '<?xml version="1.0" encoding="utf-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"><cbc:ID>' . $docId . '</cbc:ID><cbc:CustomizationID>2.0</cbc:CustomizationID><cbc:UBLVersionID>2.1</cbc:UBLVersionID><cac:AccountingSupplierParty><cac:Party><cac:PartyLegalEntity><cbc:RegistrationName><![CDATA[' . $company->business_name . ']]></cbc:RegistrationName></cac:PartyLegalEntity></cac:Party></cac:AccountingSupplierParty></Invoice>';
-        
-        // CDR (Zip) Simulado (Base64)
-        // Este es un zip genérico de un CDR de SUNAT (vacío, solo la cabecera MOCK)
         $dummyCdrZip = base64_encode('PK' . chr(3) . chr(4) . '... MOCK CDR SUNAT ... ' . $docId);
-        
-        // PDF Simulado
         $dummyPdf = base64_encode('%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -169,7 +200,7 @@ startxref
 
         return [
             'success' => true,
-            'message' => 'Procesado exitosamente (Validación MOCK Local).',
+            'message' => '¡Felicidades! Tu estructura es perfecta. Procesado exitosamente en Motor de Pruebas.',
             'xml_base64' => base64_encode($dummyXml),
             'cdr_base64' => $dummyCdrZip,
             'pdf_base64' => $dummyPdf,
