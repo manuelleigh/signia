@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Services\Signia\Engines;
 
@@ -11,21 +11,49 @@ class QpseEngine implements EngineContract
 {
     public function process(Company $company, array $payload): array
     {
-        // El token se guarda a nivel de compañía en su configuración o se usa el token master de la agencia.
-        // Dado que la integración con QPSE requiere el Token Bearer que te proveen.
-        $qpseEndpoint = config('services.qpse.endpoint', 'https://api.qpse.pe/v3/firmar-xml');
-        $qpseToken = config('services.qpse.token', 'AQUI_IRÁ_EL_TOKEN_QUE_ME_BRINDARÁS');
+        $isDemo = $company->environment === 'demo';
+        
+        $baseUrl = $isDemo ? 'https://demo-cpe.qpse.pe' : 'https://cpe.qpse.pe';
+        $tokenUrl = $baseUrl . '/api/auth/cpe/token';
+        // Asumiendo que el payload ya viene formateado para enviar, usamos el endpoint 'enviar'
+        // o si es solo para generar XML usamos 'generar'. Para simplificar, usamos generar/enviar.
+        // Asumiremos que el endpoint final es /api/cpe/generar basado en la petición normal.
+        $sendUrl = $baseUrl . '/api/cpe/generar';
 
         try {
-            $response = \Illuminate\Support\Facades\Http::withToken($qpseToken)
-                ->timeout(10)
-                ->post($qpseEndpoint, $payload);
+            // 1. Obtener Token CPE
+            $tokenResponse = Http::post($tokenUrl, [
+                'username' => $company->qpse_username,
+                'password' => $company->qpse_password
+            ]);
+
+            if (!$tokenResponse->successful()) {
+                return [
+                    'success' => false,
+                    'message' => 'Error de autenticación con el proveedor de firma: ' . $tokenResponse->body()
+                ];
+            }
+
+            $tokenData = $tokenResponse->json();
+            $cpeToken = $tokenData['token'] ?? null;
+
+            if (!$cpeToken) {
+                return [
+                    'success' => false,
+                    'message' => 'El proveedor de firma no devolvió un token válido.'
+                ];
+            }
+
+            // 2. Enviar comprobante
+            $response = Http::withToken($cpeToken)
+                ->timeout(15)
+                ->post($sendUrl, $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
                 return [
                     'success' => true,
-                    'message' => 'Enviado a QPSE exitosamente.',
+                    'message' => 'Procesado exitosamente.',
                     'xml_base64' => $data['xml_base64'] ?? null,
                     'cdr_base64' => $data['cdr_base64'] ?? null,
                     'pdf_base64' => $data['pdf_base64'] ?? null,
@@ -35,14 +63,14 @@ class QpseEngine implements EngineContract
 
             return [
                 'success' => false,
-                'message' => 'Error de QPSE: ' . $response->body()
+                'message' => 'Error del proveedor de firma: ' . $response->body()
             ];
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("QpseEngine Error: " . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Error de conexión con QPSE: ' . $e->getMessage()
+                'message' => 'Error de conexión con proveedor de firma: ' . $e->getMessage()
             ];
         }
     }
