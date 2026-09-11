@@ -207,4 +207,69 @@ startxref
             'ticket' => 'MOCK-' . time(),
         ];
     }
+
+    public function consult(Company $company, string $ticket): array
+    {
+        $isDemo = $company->environment === 'demo';
+        
+        if ($isDemo) {
+            return [
+                'success' => true,
+                'status' => 'accepted',
+                'message' => 'Consulta de ticket MOCK procesada exitosamente.',
+                'cdr_base64' => base64_encode('PK' . chr(3) . chr(4) . '... MOCK CDR SUNAT ... '),
+            ];
+        }
+
+        $baseUrl = 'https://cpe.qpse.pe';
+        $tokenUrl = $baseUrl . '/api/auth/cpe/token';
+        $consultUrl = $baseUrl . '/api/cpe/consultar-ticket';
+
+        try {
+            $tokenResponse = Http::post($tokenUrl, [
+                'username' => $company->qpse_username,
+                'password' => $company->qpse_password
+            ]);
+
+            if (!$tokenResponse->successful()) {
+                return [
+                    'success' => false,
+                    'status' => 'exception',
+                    'message' => 'Error autenticando con proveedor de firma'
+                ];
+            }
+
+            $cpeToken = $tokenResponse->json('token');
+
+            $response = Http::withToken($cpeToken)
+                ->timeout(15)
+                ->post($consultUrl, [
+                    'ticket' => $ticket
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'status' => $data['status'] ?? 'accepted', // Asumiendo que QPSE devuelve un status
+                    'message' => 'Consulta procesada.',
+                    'cdr_base64' => $data['cdr_base64'] ?? null,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'status' => 'exception',
+                'message' => 'Error del proveedor de firma al consultar ticket: ' . $response->body()
+            ];
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("QpseEngine Consult Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'status' => 'exception',
+                'message' => 'Error de conexión con proveedor de firma: ' . $e->getMessage()
+            ];
+        }
+    }
 }

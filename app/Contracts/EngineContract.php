@@ -14,4 +14,13 @@ interface EngineContract
      * @return array
      */
     public function process(Company $company, array $payload): array;
+
+    /**
+     * Consulta el estado de un ticket asíncrono.
+     *
+     * @param Company $company
+     * @param string $ticket
+     * @return array
+     */
+    public function consult(Company $company, string $ticket): array;
 }

@@ -7,9 +7,10 @@ use App\Models\Company;
 use App\Models\Document;
 use App\Services\Billing\BalanceService;
 use App\Services\Signia\EngineRouter;
+use App\Jobs\ProcessDocumentJob;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Exception;
+use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
@@ -46,9 +47,19 @@ class DocumentController extends Controller
             return response()->json(['error' => 'RUC no registrado bajo esta agencia.'], 404);
         }
 
+        // Verificar si el documento ya existe para evitar cobros dobles
+        $existingDoc = Document::where('company_id', $company->id)
+                                ->where('document_type', $docType)
+                                ->where('serie', $series)
+                                ->where('number', $number)
+                                ->first();
+        if ($existingDoc && $existingDoc->status !== 'exception' && $existingDoc->status !== 'rejected') {
+            return response()->json(['error' => 'El documento ya existe y está procesado o en cola.'], 422);
+        }
+
         $isDemo = $company->environment === 'demo';
 
-        // 2. Descontar saldo con Bloqueo Pesimista (SOLO en ProducciÃ³n)
+        // 2. Descontar saldo con Bloqueo Pesimista (SOLO en Producción)
         $engineType = $company->engine_type;
         $balanceField = $engineType === 'qpse' ? 'balance_qpse' : 'balance_native';
 
@@ -61,65 +72,38 @@ class DocumentController extends Controller
         }
 
         try {
-            // 3. Enrutar al Motor Correspondiente (PSE o Nativo)
-            $engine = $this->engineRouter->resolve($company);
-            $payload = $request->all();
-            $result = $engine->process($company, $payload);
-
-            if ((isset($result['status']) && $result['status'] === 'error') || (isset($result['success']) && $result['success'] === false)) {
-                // Revertir saldo
-                if (!$isDemo) {
-                    $agency->increment($balanceField);
-                }
-                return response()->json($result, 500);
-            }
-
-            // 4. Guardar archivos localmente para trazabilidad (4 aÃ±os SUNAT)
-            $fileNameBase = "{$ruc}-{$docType}-{$series}-{$number}";
-            $pathPrefix = "documents/{$ruc}/" . date('Y/m');
+            // 3. Crear registro inicial en DB
+            $ticket = 'SIG-' . strtoupper(Str::random(12));
             
-            $xmlPath = null;
-            if (!empty($result['xml_base64'])) {
-                $xmlPath = "{$pathPrefix}/{$fileNameBase}.xml";
-                Storage::disk('public')->put($xmlPath, base64_decode($result['xml_base64']));
-            }
-            
-            $cdrPath = null;
-            if (!empty($result['cdr_base64'])) {
-                $cdrPath = "{$pathPrefix}/R-{$fileNameBase}.zip";
-                Storage::disk('public')->put($cdrPath, base64_decode($result['cdr_base64']));
+            $document = $existingDoc;
+            if (!$document) {
+                $document = Document::create([
+                    'agency_id' => $agency->id,
+                    'company_id' => $company->id,
+                    'document_type' => $docType,
+                    'serie' => $series,
+                    'number' => $number,
+                    'status' => 'in_process',
+                    'ticket' => $ticket,
+                ]);
+            } else {
+                $document->update([
+                    'status' => 'in_process',
+                    'ticket' => $ticket,
+                ]);
             }
 
-            $pdfPath = null;
-            if (!empty($result['pdf_base64'])) {
-                $pdfPath = "{$pathPrefix}/{$fileNameBase}.pdf";
-                Storage::disk('public')->put($pdfPath, base64_decode($result['pdf_base64']));
-            }
-
-            // 5. Guardar historial
-            $document = Document::create([
-                'agency_id' => $agency->id,
-                'company_id' => $company->id,
-                'document_type' => $docType,
-                'serie' => $series,
-                'number' => $number,
-                'xml_hash' => $result['xml_hash'] ?? null,
-                'status' => 'accepted',
-                'ticket' => $result['ticket'] ?? null,
-                'xml_path' => $xmlPath,
-                'cdr_path' => $cdrPath,
-                'pdf_path' => $pdfPath,
-            ]);
+            // 4. Encolar el procesamiento
+            ProcessDocumentJob::dispatch($document->id, $request->all(), $company->id, $agency->id);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Documento procesado correctamente.',
-                'data' => $document,
-                'xml_base64' => $result['xml_base64'] ?? null,
-                'cdr_base64' => $result['cdr_base64'] ?? null,
-                'pdf_base64' => $result['pdf_base64'] ?? null,
-                'ticket' => $result['ticket'] ?? null,
-            ]);
+                'message' => 'Documento encolado correctamente. Consulte el estado con el ticket provisto.',
+                'status' => 'in_process',
+                'data' => [
+                    'ticket' => $ticket,
+                ]
+            ], 202);
 
         } catch (Exception $e) {
             // Revertir saldo
@@ -141,12 +125,85 @@ class DocumentController extends Controller
             'ticket' => 'required|string'
         ]);
 
-        // Simulacion de respuesta de SUNAT para el ticket
+        $agency = $request->user()->agency;
+        if (!$agency) {
+            return response()->json(['success' => false, 'message' => 'Agencia no encontrada.'], 401);
+        }
+
+        $document = Document::whereHas('company', function($q) use ($request, $agency) {
+            $q->where('ruc', $request->ruc)->where('agency_id', $agency->id);
+        })
+        ->where('ticket', $request->ticket)
+        ->first();
+
+        if (!$document) {
+            return response()->json(['success' => false, 'message' => 'Ticket no encontrado.'], 404);
+        }
+
+        // Si ya está terminado a nivel de base de datos local
+        if (in_array($document->status, ['accepted', 'accepted_with_observations', 'rejected'])) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Consulta procesada. El documento ya cuenta con resolución final.',
+                'status' => $document->status,
+                'cdr_url' => $document->cdr_path ? url("storage/" . $document->cdr_path) : null,
+                'xml_url' => $document->xml_path ? url("storage/" . $document->xml_path) : null,
+                'pdf_url' => $document->pdf_path ? url("storage/" . $document->pdf_path) : null,
+            ]);
+        }
+
+        // Si es un documento enviado por sendSummary (Resumen/Baja) o si el motor en sí quedó pendiente
+        if ($document->status === 'in_process') {
+            try {
+                // Consultamos con el motor directo (ya sea SUNAT o QPSE)
+                $engine = $this->engineRouter->resolve($document->company);
+                // Si el ticket es de Signia (arranca con SIG-), significa que el worker todavía no lo procesa.
+                if (str_starts_with($document->ticket, 'SIG-')) {
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'in_process',
+                        'message' => 'El documento sigue en cola de procesamiento local.',
+                    ]);
+                }
+                
+                // Si el ticket no es de Signia, es un ticket real de SUNAT o QPSE devuelto tras un sendSummary
+                $result = $engine->consult($document->company, $document->ticket);
+                
+                if (isset($result['status']) && $result['status'] !== 'in_process' && $result['status'] !== 'exception') {
+                    // Actualizar documento con los base64 si llegaron
+                    $ruc = $document->company->ruc;
+                    $fileNameBase = "{$ruc}-{$document->document_type}-{$document->serie}-{$document->number}";
+                    $pathPrefix = "documents/{$ruc}/" . date('Y/m');
+                    $cdrPath = $document->cdr_path;
+
+                    if (!empty($result['cdr_base64'])) {
+                        $cdrPath = "{$pathPrefix}/R-{$fileNameBase}.zip";
+                        \Illuminate\Support\Facades\Storage::disk('public')->put($cdrPath, base64_decode($result['cdr_base64']));
+                        $document->update(['cdr_path' => $cdrPath]);
+                    }
+
+                    $document->update(['status' => $result['status']]);
+                }
+
+                return response()->json([
+                    'success' => $result['success'] ?? true,
+                    'status' => $result['status'] ?? 'in_process',
+                    'message' => $result['message'] ?? 'Consulta realizada.',
+                    'cdr_base64' => $result['cdr_base64'] ?? null,
+                ]);
+
+            } catch (Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al consultar motor: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+
         return response()->json([
-            'success' => true,
-            'message' => 'Consulta de ticket procesada correctamente',
-            'status' => 'accepted',
-            'cdr_base64' => 'UEsDBBQAAAAIA...' // CDR simulado
+            'success' => false,
+            'status' => $document->status,
+            'message' => 'El estado actual no permite consulta externa.',
         ]);
     }
 
@@ -171,7 +228,6 @@ class DocumentController extends Controller
 
         $documents = $query->latest()->paginate($request->per_page ?? 15);
 
-        // Map para agregar URLs de descarga absolutas
         $documents->getCollection()->transform(function ($doc) {
             $doc->xml_url = $doc->xml_path ? url("storage/" . $doc->xml_path) : null;
             $doc->cdr_url = $doc->cdr_path ? url("storage/" . $doc->cdr_path) : null;
@@ -190,7 +246,8 @@ class DocumentController extends Controller
         $request->validate([
             'serie' => 'required|string',
             'number' => 'required|string',
-            'ruc' => 'required|string|size:11'
+            'ruc' => 'required|string|size:11',
+            'payload' => 'required|array' // Necesitamos el payload original
         ]);
 
         $agency = $request->user()->agency;
@@ -209,12 +266,38 @@ class DocumentController extends Controller
             return response()->json(['success' => false, 'message' => 'Documento no encontrado.'], 404);
         }
 
-        // Lógica de reintento simulada para propósitos de la API B2B
-        // Aquí se usaría el motor para reenviar o consultar el CDR pendiente.
+        if (!in_array($document->status, ['exception', 'rejected'])) {
+            return response()->json(['success' => false, 'message' => 'Solo se pueden reintentar comprobantes fallidos o en excepción.'], 422);
+        }
+
+        $company = $document->company;
+        $isDemo = $company->environment === 'demo';
+        $engineType = $company->engine_type;
+        $balanceField = $engineType === 'qpse' ? 'balance_qpse' : 'balance_native';
+
+        // Si fue rejected o exception y no se descontó saldo (o se devolvió), cobramos de nuevo
+        if (!$isDemo) {
+            try {
+                $this->balanceService->deductBalance($agency->id, $engineType);
+            } catch (Exception $e) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+            }
+        }
+
+        $ticket = 'SIG-' . strtoupper(Str::random(12));
+        $document->update([
+            'status' => 'in_process',
+            'ticket' => $ticket
+        ]);
+
+        ProcessDocumentJob::dispatch($document->id, $request->payload, $company->id, $agency->id);
+
         return response()->json([
             'success' => true,
-            'message' => 'Reintento de envío o consulta encolado/ejecutado.',
-            'data' => $document
-        ]);
+            'message' => 'Reintento de envío encolado correctamente.',
+            'data' => [
+                'ticket' => $ticket
+            ]
+        ], 202);
     }
 }
