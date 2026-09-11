@@ -193,6 +193,21 @@ const deleteToken = (id) => {
 
         </div>
 
+        <!-- Gráfico de Emisiones -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="ph ph-chart-line-up text-indigo-600"></i> Emisiones de los últimos 15 días
+                </h3>
+            </div>
+            <div class="p-6 h-80">
+                <Line v-if="chartDataObj" :data="chartDataObj" :options="chartOptions" />
+                <div v-else class="h-full flex items-center justify-center text-slate-400">
+                    No hay datos suficientes
+                </div>
+            </div>
+        </div>
+
         <!-- API Keys -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
