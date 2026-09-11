@@ -17,7 +17,7 @@ class AgencyController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'balance_qpse' => $agency->balance_qpse,
+                'balance_pse'    => $agency->balance_qpse,
                 'balance_native' => $agency->balance_native,
             ]
         ]);

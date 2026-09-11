@@ -310,8 +310,8 @@ echo $response->getBody();</code></pre>
       "ruc": "20123456789",
       "business_name": "Mi Empresa SAC",
       "environment": "demo",
-      "engine_type": "qpse",
-      "qpse_username": "20123456789MODDEMO",
+      "engine_type": "pse",
+      "pse_username": "20123456789MODDEMO",
       "sol_user": "MIUSUARIOSOL",
       "created_at": "2026-01-15T10:30:00.000000Z"
     }
@@ -326,15 +326,15 @@ echo $response->getBody();</code></pre>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">ruc</code></td><td>string</td><td>RUC de 11 dígitos.</td></tr>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">business_name</code></td><td>string</td><td>Razón social de la empresa.</td></tr>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">environment</code></td><td>string</td><td><code>demo</code> o <code>production</code>.</td></tr>
-                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">engine_type</code></td><td>string</td><td><code>qpse</code> (firma delegada) o <code>native</code> (certificado propio).</td></tr>
-                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">qpse_username</code></td><td>string</td><td>Usuario del Motor PSE asignado al registrar la empresa.</td></tr>
+                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">engine_type</code></td><td>string</td><td><code>pse</code> (firma delegada por Signia) o <code>native</code> (certificado propio).</td></tr>
+                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">pse_username</code></td><td>string</td><td>Usuario del Motor PSE asignado al registrar la empresa.</td></tr>
                         </tbody>
                     </table>
                 </section>
 
                 <section id="crear-empresa" class="mb-20 pt-8 border-t border-gray-100">
                     <h1 class="text-3xl font-bold text-gray-900 mb-6">Crear Empresa</h1>
-                    <p class="mb-6 leading-relaxed">Registra una nueva empresa bajo tu agencia en Signia. Si el motor es <code>qpse</code>, el sistema provisiona y devuelve automáticamente las credenciales del Motor PSE para ese RUC.</p>
+                    <p class="mb-6 leading-relaxed">Registra una nueva empresa bajo tu agencia en Signia. Si el motor es <code>pse</code>, el sistema provisiona y devuelve automáticamente las credenciales del Motor PSE para ese RUC.</p>
                     <div class="endpoint-box"><span class="method-post">POST</span> /api/v1/empresa/crear</div>
 
                     <h3 class="text-lg font-semibold text-gray-900 mb-2 mt-8">Headers</h3>
@@ -354,7 +354,7 @@ echo $response->getBody();</code></pre>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">ruc</code></td><td>string</td><td><strong>Sí</strong></td><td>RUC de 11 dígitos de la empresa a registrar.</td></tr>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">business_name</code></td><td>string</td><td><strong>Sí</strong></td><td>Razón social de la empresa. Máx. 255 caracteres.</td></tr>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">environment</code></td><td>string</td><td>No</td><td>Entorno inicial: <code>demo</code> o <code>production</code>. Por defecto: <code>demo</code>.</td></tr>
-                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">engine_type</code></td><td>string</td><td><strong>Sí</strong></td><td><code>qpse</code> para firma delegada o <code>native</code> para certificado propio.</td></tr>
+                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">engine_type</code></td><td>string</td><td><strong>Sí</strong></td><td><code>pse</code> para firma delegada por Signia, o <code>native</code> para certificado digital propio.</td></tr>
                         </tbody>
                     </table>
 
@@ -363,7 +363,7 @@ echo $response->getBody();</code></pre>
   "ruc": "20123456789",
   "business_name": "Mi Empresa SAC",
   "environment": "demo",
-  "engine_type": "qpse"
+  "engine_type": "pse"
 }</code></pre>
 
                     <h3 class="text-lg font-semibold text-gray-900 mb-2 mt-8">Respuesta exitosa (201)</h3>
@@ -374,7 +374,7 @@ echo $response->getBody();</code></pre>
     "ruc": "20123456789",
     "business_name": "Mi Empresa SAC",
     "environment": "demo",
-    "engine_type": "qpse",
+    "engine_type": "pse",
     "username": "20123456789MODDEMO",
     "password": "p@ssG3n3r4d0"
   }
@@ -395,7 +395,7 @@ echo $response->getBody();</code></pre>
 
                 <section id="produccion-empresa" class="mb-20 pt-8 border-t border-gray-100">
                     <h1 class="text-3xl font-bold text-gray-900 mb-6">Pasar Empresa a Producción</h1>
-                    <p class="mb-6 leading-relaxed">Cambia el entorno de una empresa de <code>demo</code> a <code>production</code>. Si el motor es <code>qpse</code>, Signia realiza la activación formal en el proveedor de firmas automáticamente.</p>
+                    <p class="mb-6 leading-relaxed">Cambia el entorno de una empresa de <code>demo</code> a <code>production</code>. Si el motor es <code>pse</code>, Signia realiza la activación formal en el proveedor de firmas automáticamente.</p>
                     <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-6">
                         <p class="text-amber-800 font-semibold text-sm">Acción irreversible</p>
                         <p class="text-amber-700 text-sm mt-1">Una vez en producción, la empresa no puede regresar a modo demo. Asegúrese de que las credenciales SOL y el certificado digital estén correctamente configurados antes de ejecutar.</p>
@@ -548,7 +548,7 @@ echo $response->getBody();</code></pre>
                     <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm"><code>{
   "success": true,
   "data": {
-    "balance_qpse": 997,
+    "balance_pse": 997,
     "balance_native": 500
   }
 }</code></pre>
@@ -557,7 +557,7 @@ echo $response->getBody();</code></pre>
                     <table>
                         <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
                         <tbody>
-                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">balance_qpse</code></td><td>integer</td><td>Firmas disponibles para el Motor PSE (delegado). Se descuenta 1 por cada comprobante emitido en entorno <code>production</code>.</td></tr>
+                            <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">balance_pse</code></td><td>integer</td><td>Firmas disponibles para el Motor PSE (delegado). Se descuenta 1 por cada comprobante emitido en entorno <code>production</code>.</td></tr>
                             <tr><td><code class="text-blue-600 bg-blue-50 px-1 py-0.5 rounded">balance_native</code></td><td>integer</td><td>Firmas disponibles para el Motor Nativo (certificado propio). No se descuenta en entorno demo.</td></tr>
                         </tbody>
                     </table>

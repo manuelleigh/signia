@@ -18,7 +18,19 @@ class CompanyController extends Controller
 
         $companies = $agency->companies()
             ->select('id', 'ruc', 'business_name', 'environment', 'engine_type', 'qpse_username', 'sol_user', 'created_at')
-            ->get();
+            ->get()
+            ->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'ruc' => $c->ruc,
+                    'business_name' => $c->business_name,
+                    'environment' => $c->environment,
+                    'engine_type' => $c->engine_type === 'qpse' ? 'pse' : $c->engine_type,
+                    'pse_username' => $c->qpse_username,
+                    'sol_user' => $c->sol_user,
+                    'created_at' => $c->created_at,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -32,7 +44,7 @@ class CompanyController extends Controller
             'ruc' => 'required|string|size:11',
             'business_name' => 'required|string|max:255',
             'environment' => 'nullable|in:demo,production',
-            'engine_type' => 'required|in:qpse,native'
+            'engine_type' => 'required|in:pse,native'
         ]);
 
         $agency = $request->user()->agency;
@@ -43,6 +55,8 @@ class CompanyController extends Controller
         $ruc = $request->ruc;
         $env = $request->environment ?? 'demo';
         $engineType = $request->engine_type;
+        // Map public alias to internal engine name
+        $internalEngine = $engineType === 'pse' ? 'qpse' : $engineType;
 
         // Validar si ya existe
         if (Company::where('ruc', $ruc)->where('agency_id', $agency->id)->exists()) {
@@ -53,10 +67,10 @@ class CompanyController extends Controller
             'ruc' => $ruc,
             'business_name' => $request->business_name,
             'environment' => $env,
-            'engine_type' => $engineType,
+            'engine_type' => $internalEngine,
         ];
 
-        if ($engineType === 'qpse') {
+        if ($internalEngine === 'qpse') {
             $qpseToken = config('services.qpse.token');
             if (!$qpseToken) {
                 return response()->json(['success' => false, 'message' => 'Error de configuraciÃ³n del sistema (Token faltante).'], 500);
@@ -116,9 +130,9 @@ class CompanyController extends Controller
                 'ruc' => $company->ruc,
                 'business_name' => $company->business_name,
                 'environment' => $company->environment,
-                'engine_type' => $company->engine_type,
-                'username' => $company->qpse_username,
-                'password' => $company->qpse_password
+                'engine_type' => $company->engine_type === 'qpse' ? 'pse' : $company->engine_type,
+                'pse_username' => $company->qpse_username,
+                'pse_password' => $company->qpse_password
             ]
         ], 201);
     }
