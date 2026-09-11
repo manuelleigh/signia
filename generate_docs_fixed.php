@@ -1,3 +1,6 @@
+<?php
+
+$docs = <<<HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -123,15 +126,15 @@
 
             <div class="bg-slate-900 rounded-lg p-4 overflow-x-auto code-content" id="auth-php" data-group="auth" style="display:none;">
 <pre><code class="text-slate-300">&lt;?php
-<span class="text-pink-400">$client</span> = new \GuzzleHttp\Client();
-<span class="text-pink-400">$response</span> = $client->post('https://signia.kore.pe/api/v1/auth/token', [
+<span class="text-pink-400">\$client</span> = new \GuzzleHttp\Client();
+<span class="text-pink-400">\$response</span> = \$client->post('https://signia.kore.pe/api/v1/auth/token', [
     'json' => [
         'email' => 'agencia@kore.pe',
         'password' => 'secretpassword',
         'device_name' => 'MI_ERP'
     ]
 ]);
-echo $response->getBody();</code></pre>
+echo \$response->getBody();</code></pre>
             </div>
 
             <div class="bg-slate-900 rounded-lg p-4 overflow-x-auto code-content" id="auth-node" data-group="auth" style="display:none;">
@@ -273,8 +276,8 @@ axios.post('https://signia.kore.pe/api/v1/auth/token', {
 
             <div class="bg-slate-900 rounded-lg p-4 overflow-x-auto code-content" id="send-php" data-group="send" style="display:none;">
 <pre><code class="text-slate-300">&lt;?php
-<span class="text-pink-400">$client</span> = new \GuzzleHttp\Client();
-<span class="text-pink-400">$response</span> = $client->post('https://signia.kore.pe/api/v1/documents/send', [
+<span class="text-pink-400">\$client</span> = new \GuzzleHttp\Client();
+<span class="text-pink-400">\$response</span> = \$client->post('https://signia.kore.pe/api/v1/documents/send', [
     'headers' => [
         'Authorization' => 'Bearer TU_TOKEN',
         'Accept' => 'application/json'
@@ -295,7 +298,7 @@ axios.post('https://signia.kore.pe/api/v1/auth/token', {
         ]
     ]
 ]);
-echo $response->getBody();</code></pre>
+echo \$response->getBody();</code></pre>
             </div>
 
             <!-- RESPUESTAS -->
@@ -459,12 +462,12 @@ echo $response->getBody();</code></pre>
                     const group = tab.getAttribute('data-group');
                     const targetId = tab.getAttribute('data-target');
                     
-                    document.querySelectorAll(`.tabs-container[data-group="${group}"] .code-tab`).forEach(t => {
+                    document.querySelectorAll(`.tabs-container[data-group="\${group}"] .code-tab`).forEach(t => {
                         t.classList.remove('active');
                         t.classList.add('text-slate-500');
                     });
                     
-                    document.querySelectorAll(`.code-content[data-group="${group}"]`).forEach(c => {
+                    document.querySelectorAll(`.code-content[data-group="\${group}"]`).forEach(c => {
                         c.style.display = 'none';
                     });
                     
@@ -502,3 +505,8 @@ echo $response->getBody();</code></pre>
     </script>
 </body>
 </html>
+HTML;
+
+file_put_contents('resources/views/docs.blade.php', $docs);
+echo "Documentation rewritten with inline styles for display none and all endpoints.";
+
