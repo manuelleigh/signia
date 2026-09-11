@@ -27,9 +27,6 @@ class ProcessDocumentJob implements ShouldQueue
     protected $companyId;
     protected $agencyId;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(int $documentId, array $payload, int $companyId, int $agencyId)
     {
         $this->documentId = $documentId;
@@ -38,9 +35,6 @@ class ProcessDocumentJob implements ShouldQueue
         $this->agencyId = $agencyId;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(EngineRouter $engineRouter): void
     {
         $document = Document::find($this->documentId);
@@ -48,7 +42,7 @@ class ProcessDocumentJob implements ShouldQueue
         $agency = Agency::find($this->agencyId);
 
         if (!$document || !$company || !$agency) {
-            Log::error("ProcessDocumentJob: Datos incompletos (Doc: {$this->documentId}, Comp: {$this->companyId}, Agency: {$this->agencyId})");
+            Log::error("ProcessDocumentJob: Datos incompletos (Doc: {$this->documentId})");
             return;
         }
 
@@ -57,17 +51,9 @@ class ProcessDocumentJob implements ShouldQueue
             $result = $engine->process($company, $this->payload);
 
             if ((isset($result['status']) && $result['status'] === 'exception' && empty($result['success'])) || (isset($result['success']) && $result['success'] === false)) {
-                // Revertir saldo solo si NO es demo
-                if ($company->environment !== 'demo') {
-                    $balanceField = $company->engine_type === 'qpse' ? 'balance_qpse' : 'balance_native';
-                    $agency->increment($balanceField);
-                }
-
-                $document->update([
-                    'status' => 'exception',
-                ]);
-                Log::error("ProcessDocumentJob Error procesando doc {$this->documentId}: " . ($result['message'] ?? 'Error desconocido'));
-                return;
+                
+                // Forzamos un throw para que la cola lo intente de nuevo
+                throw new Exception($result['message'] ?? 'Error desconocido del motor');
             }
 
             // Éxito o Aceptado con Observaciones o Rechazado (pero que fue procesado)
@@ -98,27 +84,41 @@ class ProcessDocumentJob implements ShouldQueue
             }
 
             $document->update([
-                'status' => $result['status'] ?? 'accepted', // accepted, rejected, accepted_with_observations, in_process
-                'ticket' => $result['ticket'] ?? $document->ticket, // mantener ticket anterior si no devuelve uno nuevo (caso de error)
+                'status' => $result['status'] ?? 'accepted', 
+                'ticket' => $result['ticket'] ?? $document->ticket,
                 'xml_path' => $xmlPath ?? $document->xml_path,
                 'cdr_path' => $cdrPath ?? $document->cdr_path,
                 'pdf_path' => $pdfPath ?? $document->pdf_path,
             ]);
 
         } catch (Exception $e) {
-            // Revertir saldo solo si NO es demo
-            if ($company->environment !== 'demo') {
-                $balanceField = $company->engine_type === 'qpse' ? 'balance_qpse' : 'balance_native';
-                $agency->increment($balanceField);
-            }
+            Log::error("ProcessDocumentJob Exception: " . $e->getMessage());
+            $document->update(['status' => 'exception']);
+            throw $e; // Re-lanza para que Laravel cuente el intento (tries = 3)
+        }
+    }
 
+    /**
+     * Handle a job failure.
+     * Solo se ejecuta cuando se agotaron todos los intentos (tries = 3).
+     */
+    public function failed(?Exception $exception): void
+    {
+        $company = Company::find($this->companyId);
+        $agency = Agency::find($this->agencyId);
+        $document = Document::find($this->documentId);
+
+        if ($company && $agency && $company->environment !== 'demo') {
+            $balanceField = $company->engine_type === 'qpse' ? 'balance_qpse' : 'balance_native';
+            $agency->increment($balanceField); // Devolvemos el saldo solo al final
+        }
+
+        if ($document) {
             $document->update([
                 'status' => 'exception',
             ]);
-            Log::error("ProcessDocumentJob Exception: " . $e->getMessage());
-            
-            // Re-throw para que Laravel intente de nuevo según $tries
-            throw $e;
         }
+        
+        Log::critical("ProcessDocumentJob falló permanentemente para doc {$this->documentId}. Saldo devuelto.");
     }
 }

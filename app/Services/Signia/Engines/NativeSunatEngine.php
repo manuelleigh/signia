@@ -45,8 +45,11 @@ class NativeSunatEngine implements EngineContract
             @unlink($zipPath);
 
             // 5. Enviar vía SoapClient
-            // Para demo/beta de SUNAT
-            $wsdl = 'https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService?wsdl';
+            $isProd = $company->environment === 'production';
+            $wsdl = $isProd 
+                ? 'https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl'
+                : 'https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService?wsdl';
+
             $ws = new WsClient($wsdl);
             $ws->setCredentials(
                 $company->certificate->sol_user,
@@ -137,11 +140,16 @@ class NativeSunatEngine implements EngineContract
     public function consult(Company $company, string $ticket): array
     {
         try {
-            $wsdl = 'https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billConsultService?wsdl';
-            // Para consulta, SUNAT a veces usa otro endpoint o wsdl diferente.
-            // Para getStatus el param es ticket
-            $ws = new WsClient('consultCdrStatus'); // Asumiendo que WsClient maneja esto si le pasamos consultCdrStatus
-            $ws->setService('https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService'); 
+            $isProd = $company->environment === 'production';
+            $wsdl = $isProd
+                ? 'https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billConsultService?wsdl'
+                : 'https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billConsultService?wsdl';
+            $serviceUrl = $isProd
+                ? 'https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService'
+                : 'https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService';
+
+            $ws = new WsClient('consultCdrStatus');
+            $ws->setService($serviceUrl); 
             $ws->setCredentials(
                 $company->certificate->sol_user,
                 decrypt($company->certificate->sol_password)
