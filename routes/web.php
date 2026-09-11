@@ -17,6 +17,12 @@ Route::view('/docs/authentication', 'docs.endpoints.auth-token')->name('docs.aut
 Route::view('/docs/documents/send', 'docs.endpoints.documents-send')->name('docs.documents.send');
 Route::view('/docs/documents/consult', 'docs.endpoints.documents-consult')->name('docs.documents.consult');
 Route::view('/docs/documents/reintentar', 'docs.endpoints.documents-reintentar')->name('docs.documents.reintentar');
+Route::view('/docs/empresas', 'docs.endpoints.empresas-index')->name('docs.empresas.index');
+Route::view('/docs/empresa/crear', 'docs.endpoints.empresa-crear')->name('docs.empresa.crear');
+Route::view('/docs/empresa/produccion', 'docs.endpoints.empresa-produccion')->name('docs.empresa.produccion');
+Route::view('/docs/empresa/certificado', 'docs.endpoints.empresa-certificado')->name('docs.empresa.certificado');
+Route::view('/docs/empresa/eliminar', 'docs.endpoints.empresa-eliminar')->name('docs.empresa.eliminar');
+Route::view('/docs/saldo', 'docs.endpoints.saldo')->name('docs.saldo');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

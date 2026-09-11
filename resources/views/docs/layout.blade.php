@@ -82,6 +82,60 @@
                         Reintentar comprobante
                     </a>
                 </div>
+                <div>
+                    <p class="px-3 text-xs font-bold uppercase tracking-wider text-slate-400">Empresas</p>
+                    <a href="{{ route('docs.empresas.index') }}"
+                       aria-current="{{ request()->routeIs('docs.empresas.index') ? 'page' : 'false' }}"
+                       class="mt-2 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.empresas.index') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.empresas.index') ? 'bg-blue-400/15 text-blue-300' : 'bg-blue-100 text-blue-700' }}">GET</span>
+                        Listar empresas
+                    </a>
+                    <a href="{{ route('docs.empresa.crear') }}"
+                       aria-current="{{ request()->routeIs('docs.empresa.crear') ? 'page' : 'false' }}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.empresa.crear') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.empresa.crear') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
+                        Registrar empresa
+                    </a>
+                    <a href="{{ route('docs.empresa.produccion') }}"
+                       aria-current="{{ request()->routeIs('docs.empresa.produccion') ? 'page' : 'false' }}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.empresa.produccion') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.empresa.produccion') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
+                        Pasar a producci&oacute;n
+                    </a>
+                    <a href="{{ route('docs.empresa.certificado') }}"
+                       aria-current="{{ request()->routeIs('docs.empresa.certificado') ? 'page' : 'false' }}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.empresa.certificado') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.empresa.certificado') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
+                        Subir certificado
+                    </a>
+                    <a href="{{ route('docs.empresa.eliminar') }}"
+                       aria-current="{{ request()->routeIs('docs.empresa.eliminar') ? 'page' : 'false' }}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.empresa.eliminar') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.empresa.eliminar') ? 'bg-rose-400/15 text-rose-300' : 'bg-rose-100 text-rose-700' }}">DELETE</span>
+                        Eliminar empresa
+                    </a>
+                </div>
+                <div>
+                    <p class="px-3 text-xs font-bold uppercase tracking-wider text-slate-400">Agencia</p>
+                    <a href="{{ route('docs.saldo') }}"
+                       aria-current="{{ request()->routeIs('docs.saldo') ? 'page' : 'false' }}"
+                       class="mt-2 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.saldo') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.saldo') ? 'bg-blue-400/15 text-blue-300' : 'bg-blue-100 text-blue-700' }}">GET</span>
+                        Consultar saldo
+                    </a>
+                </div>
             </nav>
         </aside>
 
