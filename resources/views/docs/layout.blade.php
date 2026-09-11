@@ -73,6 +73,14 @@
                                      {{ request()->routeIs('docs.documents.consult') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
                         Consultar estado
                     </a>
+                    <a href="{{ route('docs.documents.reintentar') }}"
+                       aria-current="{{ request()->routeIs('docs.documents.reintentar') ? 'page' : 'false' }}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.documents.reintentar') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.documents.reintentar') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
+                        Reintentar comprobante
+                    </a>
                 </div>
             </nav>
         </aside>
