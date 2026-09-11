@@ -8,7 +8,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // API B2B
-Route::post('/v1/auth/token', [\App\Http\Controllers\Api\AuthController::class, 'token']);
+Route::post('/v1/auth/token', [\App\Http\Controllers\Api\AuthController::class, 'token'])
+    ->middleware('throttle:6,1');
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     // Endpoints de Facturación

@@ -12,9 +12,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/docs', function () {
-    return view('docs');
-})->name('docs');
+Route::view('/docs', 'docs.endpoints.auth-token')->name('docs');
+Route::view('/docs/authentication', 'docs.endpoints.auth-token')->name('docs.authentication');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
