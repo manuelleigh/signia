@@ -48,7 +48,7 @@ class DocumentController extends Controller
 
         $isDemo = $company->environment === 'demo';
 
-        // 2. Descontar saldo con Bloqueo Pesimista (SOLO en Producción)
+        // 2. Descontar saldo con Bloqueo Pesimista (SOLO en ProducciÃ³n)
         $engineType = $company->engine_type;
         $balanceField = $engineType === 'qpse' ? 'balance_qpse' : 'balance_native';
 
@@ -74,7 +74,7 @@ class DocumentController extends Controller
                 return response()->json($result, 500);
             }
 
-            // 4. Guardar archivos localmente para trazabilidad (4 años SUNAT)
+            // 4. Guardar archivos localmente para trazabilidad (4 aÃ±os SUNAT)
             $fileNameBase = "{$ruc}-{$docType}-{$series}-{$number}";
             $pathPrefix = "documents/{$ruc}/" . date('Y/m');
             
@@ -147,6 +147,74 @@ class DocumentController extends Controller
             'message' => 'Consulta de ticket procesada correctamente',
             'status' => 'accepted',
             'cdr_base64' => 'UEsDBBQAAAAIA...' // CDR simulado
+        ]);
+    }
+
+    public function index(Request $request)
+    {
+        $agency = $request->user()->agency;
+        if (!$agency) {
+            return response()->json(['success' => false, 'message' => 'Agencia no encontrada.'], 401);
+        }
+
+        $query = Document::where('agency_id', $agency->id)->with('company:id,ruc,business_name');
+
+        if ($request->has('ruc')) {
+            $query->whereHas('company', function($q) use ($request) {
+                $q->where('ruc', $request->ruc);
+            });
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $documents = $query->latest()->paginate($request->per_page ?? 15);
+
+        // Map para agregar URLs de descarga absolutas
+        $documents->getCollection()->transform(function ($doc) {
+            $doc->xml_url = $doc->xml_path ? url("storage/" . $doc->xml_path) : null;
+            $doc->cdr_url = $doc->cdr_path ? url("storage/" . $doc->cdr_path) : null;
+            $doc->pdf_url = $doc->pdf_path ? url("storage/" . $doc->pdf_path) : null;
+            return $doc;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $documents
+        ]);
+    }
+
+    public function retry(Request $request)
+    {
+        $request->validate([
+            'serie' => 'required|string',
+            'number' => 'required|string',
+            'ruc' => 'required|string|size:11'
+        ]);
+
+        $agency = $request->user()->agency;
+        if (!$agency) {
+            return response()->json(['success' => false, 'message' => 'Agencia no encontrada.'], 401);
+        }
+
+        $document = Document::whereHas('company', function($q) use ($request, $agency) {
+            $q->where('ruc', $request->ruc)->where('agency_id', $agency->id);
+        })
+        ->where('serie', $request->serie)
+        ->where('number', $request->number)
+        ->first();
+
+        if (!$document) {
+            return response()->json(['success' => false, 'message' => 'Documento no encontrado.'], 404);
+        }
+
+        // Lógica de reintento simulada para propósitos de la API B2B
+        // Aquí se usaría el motor para reenviar o consultar el CDR pendiente.
+        return response()->json([
+            'success' => true,
+            'message' => 'Reintento de envío o consulta encolado/ejecutado.',
+            'data' => $document
         ]);
     }
 }

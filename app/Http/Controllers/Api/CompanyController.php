@@ -59,7 +59,7 @@ class CompanyController extends Controller
         if ($engineType === 'qpse') {
             $qpseToken = config('services.qpse.token');
             if (!$qpseToken) {
-                return response()->json(['success' => false, 'message' => 'Error de configuración del sistema (Token faltante).'], 500);
+                return response()->json(['success' => false, 'message' => 'Error de configuraciÃ³n del sistema (Token faltante).'], 500);
             }
 
             // 1. Crear
@@ -100,7 +100,7 @@ class CompanyController extends Controller
                 if (!$resProd->successful()) {
                     return response()->json([
                         'success' => false, 
-                        'message' => 'RUC registrado, pero falló el pase a Producción.',
+                        'message' => 'RUC registrado, pero fallÃ³ el pase a ProducciÃ³n.',
                         'details' => $resProd->json()
                     ], 400);
                 }
@@ -140,7 +140,7 @@ class CompanyController extends Controller
         }
 
         if ($company->environment === 'production') {
-            return response()->json(['success' => false, 'message' => 'La empresa ya se encuentra en producción.'], 400);
+            return response()->json(['success' => false, 'message' => 'La empresa ya se encuentra en producciÃ³n.'], 400);
         }
 
         if ($company->engine_type === 'qpse') {
@@ -170,7 +170,7 @@ class CompanyController extends Controller
             if (!$resProd->successful()) {
                 return response()->json([
                     'success' => false, 
-                    'message' => 'Error al pasar a producción en el motor PSE.',
+                    'message' => 'Error al pasar a producciÃ³n en el motor PSE.',
                     'details' => $resProd->json()
                 ], 400);
             }
@@ -181,11 +181,67 @@ class CompanyController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Empresa actualizada a producción exitosamente.',
+            'message' => 'Empresa actualizada a producciÃ³n exitosamente.',
             'data' => [
                 'ruc' => $company->ruc,
                 'environment' => $company->environment
             ]
+        ]);
+    }
+
+    public function uploadCertificate(Request $request)
+    {
+        $request->validate([
+            'ruc' => 'required|string|size:11',
+            'certificate' => 'required|file|mimes:p12,pem',
+            'password' => 'required|string'
+        ]);
+
+        $agency = $request->user()->agency;
+        $company = Company::where('ruc', $request->ruc)->where('agency_id', $agency->id)->first();
+        
+        if (!$company) {
+            return response()->json(['success' => false, 'message' => 'RUC no encontrado en tu cuenta.'], 404);
+        }
+
+        $file = $request->file('certificate');
+        $path = $file->storeAs("certificates/{$company->ruc}", $file->getClientOriginalName(), 'local');
+
+        $certificate = $company->certificate()->updateOrCreate(
+            ['company_id' => $company->id],
+            [
+                'path' => $path,
+                'password' => encrypt($request->password), // Guardar contraseña encriptada
+                'status' => 'active'
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Certificado subido y configurado correctamente.',
+            'data' => [
+                'ruc' => $company->ruc,
+                'certificate_path' => $path
+            ]
+        ]);
+    }
+
+    public function destroy(Request $request, $ruc)
+    {
+        $agency = $request->user()->agency;
+        $company = Company::where('ruc', $ruc)->where('agency_id', $agency->id)->first();
+        
+        if (!$company) {
+            return response()->json(['success' => false, 'message' => 'RUC no encontrado en tu cuenta.'], 404);
+        }
+
+        // Aquí podrías agregar lógica para inactivar en QPSE si fuera necesario
+        
+        $company->delete(); // Soft delete o Hard delete según migración
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Empresa eliminada/suspendida correctamente.'
         ]);
     }
 }
