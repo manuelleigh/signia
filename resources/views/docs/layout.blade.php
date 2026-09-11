@@ -65,7 +65,14 @@
                                      {{ request()->routeIs('docs.documents.send') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
                         Emitir comprobante
                     </a>
-                    <span class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-400">Consultar estado <span class="text-[10px] font-bold uppercase">Próximo</span></span>
+                    <a href="{{ route('docs.documents.consult') }}"
+                       aria-current="{{ request()->routeIs('docs.documents.consult') ? 'page' : 'false' }}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition
+                              {{ request()->routeIs('docs.documents.consult') ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-950' }}">
+                        <span class="rounded px-1.5 py-0.5 font-mono text-[11px]
+                                     {{ request()->routeIs('docs.documents.consult') ? 'bg-emerald-400/15 text-emerald-300' : 'bg-emerald-100 text-emerald-700' }}">POST</span>
+                        Consultar estado
+                    </a>
                 </div>
             </nav>
         </aside>
