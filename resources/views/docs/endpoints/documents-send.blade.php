@@ -112,7 +112,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="mt-3 text-sm leading-6 text-slate-500">El esquema completo del payload (cliente, totales, impuestos, observaciones, etc.) depende del tipo de comprobante. Consulta los ejemplos por tipo en la secci&oacute;n de referencia completa.</p>
+            <p class="mt-3 text-sm leading-6 text-slate-500">El esquema completo del payload (cliente, totales, impuestos, observaciones, etc.) depende del tipo de comprobante. <a href="{{ route('docs.documents.models') }}" class="font-semibold text-cyan-700 underline underline-offset-2 hover:text-cyan-900">Consulta los ejemplos por tipo en la secci&oacute;n de Modelos JSON</a>.</p>
         </section>
 
         {{-- TIPOS --}}
