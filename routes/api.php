@@ -15,6 +15,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     // Endpoints de Facturación
     Route::get('/documents', [\App\Http\Controllers\Api\DocumentController::class, 'index']);
     Route::post('/documents/send', [\App\Http\Controllers\Api\DocumentController::class, 'send']);
+    Route::post('/documents/void', [\App\Http\Controllers\Api\DocumentController::class, 'void']);
     Route::post('/documents/consult', [\App\Http\Controllers\Api\DocumentController::class, 'consult']);
     Route::post('/documents/reintentar', [\App\Http\Controllers\Api\DocumentController::class, 'retry']);
     

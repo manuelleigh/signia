@@ -15,6 +15,7 @@ Route::get('/', function () {
 Route::view('/docs', 'docs.endpoints.auth-token')->name('docs');
 Route::view('/docs/authentication', 'docs.endpoints.auth-token')->name('docs.authentication');
 Route::view('/docs/documents/send', 'docs.endpoints.documents-send')->name('docs.documents.send');
+Route::view('/docs/documents/void', 'docs.endpoints.documents-void')->name('docs.documents.void');
 Route::view('/docs/documents/modelos', 'docs.endpoints.models')->name('docs.documents.models');
 Route::view('/docs/documents/consult', 'docs.endpoints.documents-consult')->name('docs.documents.consult');
 Route::view('/docs/documents/reintentar', 'docs.endpoints.documents-reintentar')->name('docs.documents.reintentar');

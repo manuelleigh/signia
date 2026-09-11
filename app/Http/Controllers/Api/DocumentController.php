@@ -369,4 +369,76 @@ class DocumentController extends Controller
             ]
         ], 202);
     }
+
+    public function void(Request $request)
+    {
+        $request->validate([
+            'company.ruc' => 'required|string|size:11',
+            'document.document_type_id' => 'required|string',
+            'document.series' => 'required|string',
+            'document.number' => 'required|string',
+            'document.reason' => 'required|string|max:100',
+        ]);
+
+        $ruc = $request->input('company.ruc');
+        $agency = $request->user()->agency;
+        if (!$agency) {
+            return response()->json(['error' => 'Agency not found'], 401);
+        }
+
+        $company = \App\Models\Company::where('ruc', $ruc)->where('agency_id', $agency->id)->first();
+        if (!$company) {
+            return response()->json(['error' => 'Company not found'], 404);
+        }
+
+        // Construir Payload RA
+        $date = date('Y-m-d');
+        // Usar un correlativo aleatorio o basado en tiempo corto (SUNAT permite correlativos numéricos en las bajas)
+        $correlative = substr(time(), -5);
+
+        $payload = [
+            'company' => [
+                'ruc' => $company->ruc,
+                'business_name' => $company->business_name,
+            ],
+            'document' => [
+                'document_type_id' => 'RA',
+                'series' => date('Ymd'),
+                'number' => $correlative,
+                'reference_date' => $date, // En la realidad debería ser la fecha del comprobante afectado, pero como atajo o si no se sabe, usar la misma
+                'date_of_issue' => $date,
+                'lines' => [
+                    [
+                        'document_type_id' => $request->input('document.document_type_id'),
+                        'series' => $request->input('document.series'),
+                        'number' => $request->input('document.number'),
+                        'reason' => $request->input('document.reason'),
+                    ]
+                ]
+            ]
+        ];
+
+        // Guardar en base de datos como comprobante de tipo Baja
+        $ticket = 'SIG-' . strtoupper(\Illuminate\Support\Str::random(12));
+        $document = \App\Models\Document::create([
+            'company_id' => $company->id,
+            'agency_id' => $agency->id,
+            'document_type' => 'RA',
+            'serie' => date('Ymd'),
+            'number' => $correlative,
+            'status' => 'in_process',
+            'ticket' => $ticket,
+            'payload' => $payload,
+        ]);
+
+        \App\Jobs\ProcessDocumentJob::dispatch($document->id, $payload, $company->id, $agency->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comunicación de Baja generada y encolada.',
+            'data' => [
+                'ticket' => $ticket
+            ]
+        ], 202);
+    }
 }
