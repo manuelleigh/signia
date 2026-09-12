@@ -1,24 +1,13 @@
-﻿import re
+﻿with open('app/Services/Signia/Engines/QpseEngine.php', 'r', encoding='utf-8') as f:
+    c = f.read()
 
-with open("app/Services/Signia/Engines/QpseEngine.php", "r", encoding="utf-8") as f:
-    content = f.read()
+c = c.replace(
+    ' = round(([\'unit_value\'] * [\'quantity\']) + ([\'total_igv\'] ?? 0), 2);',
+    ' = round([\'unit_value\'] * [\'quantity\'], 2);'
+)
+c = c.replace('abs([\'total_value\'] - )', 'abs([\'total_value\'] - )')
+c = c.replace('(esperado: {})', '(esperado: {})')
+c = c.replace(' += [\'total_value\'];', ' += [\'total_value\'] + ([\'total_igv\'] ?? 0);')
 
-# Fix total_taxes -> total_igv
-content = content.replace("['total_taxes']", "['total_igv']")
-content = content.replace("'total_taxes'", "'total_igv'")
-content = content.replace("(Monto total de impuestos de este producto)", "(Monto total del IGV de este producto)")
-
-# Fix item ['total'] -> ['total_value'] and ['unit_price'] logic
-content = content.replace("['total']", "['total_value']")
-content = content.replace("'total'", "'total_value'")
-content = content.replace("(Monto total del producto con IGV incluido)", "(Valor total del producto sin IGV)")
-content = content.replace("unit_value * quantity) + impuestos", "unit_value * quantity)")
-
-# But wait! We accidentally replaced $payload['document']['total'] with $payload['document']['total_value']!
-# Let's fix document total back to ['total']
-content = content.replace("['document']['total_value']", "['document']['total']")
-content = content.replace("[total_value]: Falta", "[total]: Falta")
-content = content.replace("[total_value]: El total global", "[total]: El total global")
-
-with open("app/Services/Signia/Engines/QpseEngine.php", "w", encoding="utf-8") as f:
-    f.write(content)
+with open('app/Services/Signia/Engines/QpseEngine.php', 'w', encoding='utf-8') as f:
+    f.write(c)
