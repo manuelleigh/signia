@@ -141,11 +141,11 @@ class QpseEngine implements EngineContract
                 
                 // Sugerencia de matemÃ¡ticas
                 if (isset($item['unit_value']) && isset($item['quantity']) && isset($item['total_value'])) {
-                    $expectedTotal = round(($item['unit_value'] * $item['quantity']) + ($item['total_igv'] ?? 0), 2);
-                    if (abs($item['total_value'] - $expectedTotal) > 0.5) {
-                        $errors[] = "Item [$index]: MatemÃ¡ticas incorrectas. El 'total_value' que enviaste ({$item['total_value']}) no coincide con (unit_value * quantity) (esperado: {$expectedTotal}).";
+                    $expectedValue = round($item['unit_value'] * $item['quantity'], 2);
+                    if (abs($item['total_value'] - $expectedValue) > 0.5) {
+                        $errors[] = "Item [$index]: MatemÃ¡ticas incorrectas. El 'total_value' que enviaste ({$item['total_value']}) no coincide con (unit_value * quantity) (esperado: {$expectedValue}).";
                     }
-                    $calcTotal += $item['total_value'];
+                    $calcTotal += $item['total_value'] + ($item['total_igv'] ?? 0);
                 }
             }
         }
