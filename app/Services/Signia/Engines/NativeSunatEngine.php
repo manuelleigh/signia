@@ -16,6 +16,16 @@ class NativeSunatEngine implements EngineContract
     public function process(Company $company, array $payload): array
     {
         try {
+            // Auto-inyectar los datos de la empresa para evitar errores si el cliente solo envi?? el RUC
+            $payload['company'] = array_merge([
+                'ruc' => $company->ruc,
+                'number' => $company->ruc,
+                'name' => $company->business_name,
+                'trade_name' => $company->business_name,
+                'address' => '-',
+                'ubigeo' => '150101',
+            ], $payload['company'] ?? []);
+
             $docType = $payload['document']['document_type_id'] ?? '01';
             
             // 1. Determinar plantilla Blade

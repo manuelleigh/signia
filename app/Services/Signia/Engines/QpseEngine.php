@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Services\Signia\Engines;
 
@@ -17,7 +17,7 @@ class QpseEngine implements EngineContract
             return $this->processMockDemo($company, $payload);
         }
 
-        // Lógica de Producción Real
+        // LÃ³gica de ProducciÃ³n Real
         $baseUrl = 'https://cpe.qpse.pe';
         $tokenUrl = $baseUrl . '/api/auth/cpe/token';
         $sendUrl = $baseUrl . '/api/cpe/generar';
@@ -32,7 +32,7 @@ class QpseEngine implements EngineContract
             if (!$tokenResponse->successful()) {
                 return [
                     'success' => false,
-                    'message' => 'Error de autenticación con el proveedor de firma: ' . $tokenResponse->body()
+                    'message' => 'Error de autenticaciÃ³n con el proveedor de firma: ' . $tokenResponse->body()
                 ];
             }
 
@@ -42,7 +42,7 @@ class QpseEngine implements EngineContract
             if (!$cpeToken) {
                 return [
                     'success' => false,
-                    'message' => 'El proveedor de firma no devolvió un token válido.'
+                    'message' => 'El proveedor de firma no devolviÃ³ un token vÃ¡lido.'
                 ];
             }
 
@@ -72,13 +72,13 @@ class QpseEngine implements EngineContract
             \Illuminate\Support\Facades\Log::error("QpseEngine Error: " . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Error de conexión con proveedor de firma: ' . $e->getMessage()
+                'message' => 'Error de conexiÃ³n con proveedor de firma: ' . $e->getMessage()
             ];
         }
     }
 
     /**
-     * Motor exhaustivo de validación simulado con mensajes amigables y sugerencias (Beta).
+     * Motor exhaustivo de validaciÃ³n simulado con mensajes amigables y sugerencias (Beta).
      */
     private function processMockDemo(Company $company, array $payload): array
     {
@@ -86,16 +86,16 @@ class QpseEngine implements EngineContract
         
         // DOCUMENTO
         if (empty($payload['document']['document_type_id'])) {
-            $errors[] = '[document_type_id]: Es obligatorio. Debes indicar qué tipo de comprobante es (Ej: "01" para Factura, "03" para Boleta, "07" para Nota de Crédito).';
+            $errors[] = '[document_type_id]: Es obligatorio. Debes indicar quÃ© tipo de comprobante es (Ej: "01" para Factura, "03" para Boleta, "07" para Nota de CrÃ©dito).';
         }
         if (empty($payload['document']['series'])) {
             $errors[] = '[series]: Es obligatorio. Debes indicar la serie del comprobante (Ej: "F001" o "B001").';
         }
         if (empty($payload['document']['number'])) {
-            $errors[] = '[number]: Es obligatorio. Debes indicar el correlativo numérico (Ej: "1", "123").';
+            $errors[] = '[number]: Es obligatorio. Debes indicar el correlativo numÃ©rico (Ej: "1", "123").';
         }
         if (empty($payload['document']['currency_type_id'])) {
-            $errors[] = '[currency_type_id]: Es obligatorio. Indica la moneda (Ej: "PEN" para Soles o "USD" para Dólares).';
+            $errors[] = '[currency_type_id]: Es obligatorio. Indica la moneda (Ej: "PEN" para Soles o "USD" para DÃ³lares).';
         }
 
         // CLIENTE
@@ -103,28 +103,28 @@ class QpseEngine implements EngineContract
             $errors[] = '[customer.identity_document_type_id]: Es obligatorio. Indica el tipo de documento del cliente (Ej: "6" para RUC, "1" para DNI).';
         }
         if (empty($payload['customer']['number'])) {
-            $errors[] = '[customer.number]: Es obligatorio. Ingresa el número de RUC o DNI del cliente.';
+            $errors[] = '[customer.number]: Es obligatorio. Ingresa el nÃºmero de RUC o DNI del cliente.';
         } elseif (strlen($payload['customer']['number']) !== 11 && ($payload['customer']['identity_document_type_id'] ?? '') === '6') {
-            $errors[] = '[customer.number]: Como indicaste el tipo "6" (RUC), el número debe tener exactamente 11 dígitos.';
+            $errors[] = '[customer.number]: Como indicaste el tipo "6" (RUC), el nÃºmero debe tener exactamente 11 dÃ­gitos.';
         }
         if (empty($payload['customer']['name'])) {
-            $errors[] = '[customer.name]: Es obligatorio. Coloca la Razón Social o el nombre completo de tu cliente.';
+            $errors[] = '[customer.name]: Es obligatorio. Coloca la RazÃ³n Social o el nombre completo de tu cliente.';
         }
 
         // ITEMS
         if (empty($payload['items']) || !is_array($payload['items'])) {
-            $errors[] = '[items]: Debes enviar un arreglo de productos o servicios. ¡Un comprobante no puede estar vacío!';
+            $errors[] = '[items]: Debes enviar un arreglo de productos o servicios. Â¡Un comprobante no puede estar vacÃ­o!';
         } else {
             $calcTotal = 0;
             foreach ($payload['items'] as $index => $item) {
                 if (empty($item['internal_id'])) {
-                    $errors[] = "Item [$index]: Falta 'internal_id'. Agrega un código de producto (Ej: 'PROD-01').";
+                    $errors[] = "Item [$index]: Falta 'internal_id'. Agrega un cÃ³digo de producto (Ej: 'PROD-01').";
                 }
                 if (empty($item['description'])) {
-                    $errors[] = "Item [$index]: Falta 'description'. ¿Qué producto estás vendiendo?";
+                    $errors[] = "Item [$index]: Falta 'description'. Â¿QuÃ© producto estÃ¡s vendiendo?";
                 }
                 if (empty($item['unit_type_id'])) {
-                    $errors[] = "Item [$index]: Falta 'unit_type_id'. Agrega la unidad de medida según SUNAT (Ej: 'NIU' para bienes, 'ZZ' para servicios).";
+                    $errors[] = "Item [$index]: Falta 'unit_type_id'. Agrega la unidad de medida segÃºn SUNAT (Ej: 'NIU' para bienes, 'ZZ' para servicios).";
                 }
                 if (!isset($item['quantity']) || $item['quantity'] <= 0) {
                     $errors[] = "Item [$index]: 'quantity' debe ser mayor a 0.";
@@ -132,20 +132,20 @@ class QpseEngine implements EngineContract
                 if (!isset($item['unit_value'])) {
                     $errors[] = "Item [$index]: Falta 'unit_value' (Precio unitario sin IGV).";
                 }
-                if (!isset($item['total_taxes'])) {
-                    $errors[] = "Item [$index]: Falta 'total_taxes' (Monto total de impuestos de este producto).";
+                if (!isset($item['total_igv'])) {
+                    $errors[] = "Item [$index]: Falta 'total_igv' (Monto total del IGV de este producto).";
                 }
-                if (!isset($item['total'])) {
-                    $errors[] = "Item [$index]: Falta 'total' (Monto total del producto con IGV incluido).";
+                if (!isset($item['total_value'])) {
+                    $errors[] = "Item [$index]: Falta 'total_value' (Valor total del producto sin IGV).";
                 }
                 
-                // Sugerencia de matemáticas
-                if (isset($item['unit_value']) && isset($item['quantity']) && isset($item['total'])) {
-                    $expectedTotal = round(($item['unit_value'] * $item['quantity']) + ($item['total_taxes'] ?? 0), 2);
-                    if (abs($item['total'] - $expectedTotal) > 0.5) {
-                        $errors[] = "Item [$index]: Matemáticas incorrectas. El 'total' que enviaste ({$item['total']}) no coincide con (unit_value * quantity) + impuestos (esperado: {$expectedTotal}).";
+                // Sugerencia de matemÃ¡ticas
+                if (isset($item['unit_value']) && isset($item['quantity']) && isset($item['total_value'])) {
+                    $expectedTotal = round(($item['unit_value'] * $item['quantity']) + ($item['total_igv'] ?? 0), 2);
+                    if (abs($item['total_value'] - $expectedTotal) > 0.5) {
+                        $errors[] = "Item [$index]: MatemÃ¡ticas incorrectas. El 'total_value' que enviaste ({$item['total_value']}) no coincide con (unit_value * quantity) (esperado: {$expectedTotal}).";
                     }
-                    $calcTotal += $item['total'];
+                    $calcTotal += $item['total_value'];
                 }
             }
         }
@@ -160,7 +160,7 @@ class QpseEngine implements EngineContract
         if (!isset($payload['document']['total'])) {
             $errors[] = '[total]: Falta el monto total final del comprobante.';
         } elseif (isset($calcTotal) && abs($payload['document']['total'] - $calcTotal) > 0.5) {
-            $errors[] = "[total]: El total global de la factura ({$payload['document']['total']}) no coincide con la suma de los totales de los ítems ({$calcTotal}). Revisa tus cálculos.";
+            $errors[] = "[total]: El total global de la factura ({$payload['document']['total']}) no coincide con la suma de los totales de los Ã­tems ({$calcTotal}). Revisa tus cÃ¡lculos.";
         }
 
         // DEVOLVER ERRORES ESTRUCTURADOS SI LOS HAY
@@ -168,7 +168,7 @@ class QpseEngine implements EngineContract
             return [
                 'success' => false,
                 'message' => 'La estructura de tu comprobante tiene problemas. Por favor, corrige las siguientes observaciones para cumplir con SUNAT:',
-                'errors' => $errors // Array estructurado para que el cliente lo lea fácil
+                'errors' => $errors // Array estructurado para que el cliente lo lea fÃ¡cil
             ];
         }
 
@@ -200,7 +200,7 @@ startxref
 
         return [
             'success' => true,
-            'message' => '¡Felicidades! Tu estructura es perfecta. Procesado exitosamente en Motor de Pruebas.',
+            'message' => 'Â¡Felicidades! Tu estructura es perfecta. Procesado exitosamente en Motor de Pruebas.',
             'xml_base64' => base64_encode($dummyXml),
             'cdr_base64' => $dummyCdrZip,
             'pdf_base64' => $dummyPdf,
@@ -268,8 +268,9 @@ startxref
             return [
                 'success' => false,
                 'status' => 'exception',
-                'message' => 'Error de conexión con proveedor de firma: ' . $e->getMessage()
+                'message' => 'Error de conexiÃ³n con proveedor de firma: ' . $e->getMessage()
             ];
         }
     }
 }
+
