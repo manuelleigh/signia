@@ -1,4 +1,4 @@
-@extends('docs.layout')
+﻿@extends('docs.layout')
 
 @section('title', 'Dar de baja (Anular)')
 
@@ -23,7 +23,7 @@
                 <span class="text-slate-500">Baja</span>
             </div>
             <h1 class="mt-5 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Dar de baja un comprobante</h1>
-            <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-600">Este endpoint genera autom&aacute;ticamente el documento UBL <strong>Comunicaci&oacute;n de Baja (RA)</strong> y lo env&iacute;a a SUNAT o QPSE de forma as&iacute;ncrona. Solo necesitas enviarnos cu&aacute;l es el comprobante afectado y el motivo.</p>
+            <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-600">Este endpoint genera autom&aacute;ticamente el documento UBL <strong>Comunicaci&oacute;n de Baja (RA)</strong> y lo env&iacute;a a SUNAT o PSE de forma as&iacute;ncrona. Solo necesitas enviarnos cu&aacute;l es el comprobante afectado y el motivo.</p>
         </section>
 
         {{-- ENDPOINT --}}
@@ -100,7 +100,7 @@
         "document_type_id": "01",
         "series": "F001",
         "number": "123",
-        "reason": "Error en la digitación del cliente"
+        "reason": "Error en la digitaciÃ³n del cliente"
     }
   }'</x-docs.code>
             </div>
@@ -116,7 +116,7 @@
             <div class="mt-5">
                 <x-docs.code id="void-202">{
   "success": true,
-  "message": "Comunicación de Baja generada y encolada.",
+  "message": "ComunicaciÃ³n de Baja generada y encolada.",
   "data": {
     "ticket": "SIG-X9K2PL10M"
   }
@@ -141,3 +141,4 @@
 
     </article>
 @endsection
+

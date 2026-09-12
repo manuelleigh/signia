@@ -1,4 +1,4 @@
-@extends('docs.layout')
+﻿@extends('docs.layout')
 
 @section('title', 'Registrar empresa')
 
@@ -98,7 +98,7 @@
             <div class="mt-5 grid gap-4 sm:grid-cols-2">
                 <div class="rounded-xl border border-slate-200 p-5">
                     <p class="font-semibold text-slate-950">Motor PSE (<code>pse</code>)</p>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Al seleccionar este motor, Signia realizar&aacute; una llamada externa al motor PSE autorizado (qpse.pe) para crear la cuenta de la empresa y gestionar&aacute; autom&aacute;ticamente la firma y comunicaci&oacute;n con SUNAT como Proveedor de Servicios Electr&oacute;nicos.</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Al seleccionar este motor, Signia realizar&aacute; una llamada externa al motor PSE autorizado  para crear la cuenta de la empresa y gestionar&aacute; autom&aacute;ticamente la firma y comunicaci&oacute;n con SUNAT como Proveedor de Servicios Electr&oacute;nicos.</p>
                 </div>
                 <div class="rounded-xl border border-slate-200 p-5">
                     <p class="font-semibold text-slate-950">Motor Nativo (<code>native</code>)</p>
@@ -209,3 +209,4 @@
 
     </article>
 @endsection
+
