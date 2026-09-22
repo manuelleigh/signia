@@ -85,6 +85,15 @@ class QpseEngine implements EngineContract
         $errors = [];
         
         // DOCUMENTO
+        if (in_array($payload['document']['document_type_id'] ?? '', ['RA', 'RC'])) {
+            return [
+                'success' => true,
+                'message' => '??Felicidades! Resumen de Baja/Diario procesado exitosamente en Motor de Pruebas.',
+                'xml_base64' => base64_encode('<?xml version="1.0"?><VoidedDocuments></VoidedDocuments>'),
+                'ticket' => 'MOCK-' . time(),
+            ];
+        }
+
         if (empty($payload['document']['document_type_id'])) {
             $errors[] = '[document_type_id]: Es obligatorio. Debes indicar quÃ© tipo de comprobante es (Ej: "01" para Factura, "03" para Boleta, "07" para Nota de CrÃ©dito).';
         }
