@@ -84,11 +84,13 @@ class DocumentController extends Controller
                     'number' => $number,
                     'status' => 'in_process',
                     'ticket' => $ticket,
+                    'external_ticket' => $ticket,
                 ]);
             } else {
                 $document->update([
                     'status' => 'in_process',
                     'ticket' => $ticket,
+                    'external_ticket' => $ticket,
                 ]);
             }
 
@@ -382,7 +384,8 @@ class DocumentController extends Controller
         $ticket = 'SIG-' . strtoupper(Str::random(12));
         $document->update([
             'status' => 'in_process',
-            'ticket' => $ticket
+            'ticket' => $ticket,
+            'external_ticket' => $ticket
         ]);
 
         ProcessDocumentJob::dispatch($document->id, $request->payload, $company->id, $agency->id);
@@ -454,6 +457,7 @@ class DocumentController extends Controller
             'number' => $correlative,
             'status' => 'in_process',
             'ticket' => $ticket,
+                    'external_ticket' => $ticket,
             'payload' => $payload,
         ]);
 
