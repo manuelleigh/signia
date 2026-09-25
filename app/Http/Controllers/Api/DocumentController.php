@@ -300,7 +300,7 @@ class DocumentController extends Controller
         return response()->json([
             'success' => false,
             'status' => $document->status,
-            'message' => 'El estado actual no permite consulta externa.',
+            'message' => $document->status === 'exception' ? 'El comprobante falló en su procesamiento. Verifique los errores y reintente.' : 'El estado actual no permite consulta externa.',
         ]);
     }
 
