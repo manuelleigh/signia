@@ -228,7 +228,7 @@ class DocumentController extends Controller
         $document = Document::whereHas('company', function($q) use ($request, $agency) {
             $q->where('ruc', $request->ruc)->where('agency_id', $agency->id);
         })
-        ->where('ticket', $request->ticket)
+        ->where(function($q) use ($request) { $q->where('ticket', $request->ticket)->orWhere('external_ticket', $request->ticket); })
         ->first();
 
         if (!$document) {
